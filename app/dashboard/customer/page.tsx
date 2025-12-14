@@ -197,7 +197,7 @@ export default function CustomerDashboard() {
 
       const restaurantMap = new Map(enrichedRestaurants.map((r) => [r.id, r]));
 
-      const enrichedDishes: Dish[] =
+      const enrichedDishes: Dish[] = (
         dishData
           ?.map((d) => {
             const r = restaurantMap.get(d.home_restaurant_id);
@@ -208,7 +208,7 @@ export default function CustomerDashboard() {
               distance_km: r.distance_km,
             } as Dish;
           })
-          .filter((d): d is Dish => d !== null)) ?? [];
+          .filter((d): d is Dish => d !== null)) || [];
 
       setRestaurants(enrichedRestaurants);
       setDishes(enrichedDishes);
