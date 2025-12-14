@@ -201,7 +201,8 @@ export default function CustomerDashboard() {
         dishData
           ?.map((d) => {
             const r = restaurantMap.get(d.home_restaurant_id);
-            if (!r || !r.distance_km) return null;
+            //if (!r || !r.distance_km) return null;
+            if (!r) return null; // ✅ FIX
             return {
               ...d,
               restaurant_name: r.name,
