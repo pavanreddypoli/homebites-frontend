@@ -351,7 +351,7 @@ export default function CustomerDashboard() {
             </div>
           ))}
 
-          {location && (
+          {(location || address.length > 0) && (
             <div className="mt-4">
               <label className="text-xs font-medium">
                 Search within {distanceMiles} miles
