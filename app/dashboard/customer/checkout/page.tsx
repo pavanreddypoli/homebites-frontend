@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "";
 
   /* ---------------- CLIENT-ONLY INIT ---------------- */
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-      window.location.href = `/dashboard/customer/order-confirmation/${orderId}`;
+      window.location.href = SITE_URL + `/dashboard/customer/order-confirmation/${orderId}`;
     } catch (err) {
       console.error("Order failed:", err);
       alert("Failed to place order");
