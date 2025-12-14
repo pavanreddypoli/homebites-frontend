@@ -206,9 +206,9 @@ export default function CustomerDashboard() {
               ...d,
               restaurant_name: r.name,
               distance_km: r.distance_km,
-            };
+            } as Dish;
           })
-          .filter(Boolean) || [];
+          .filter((d): d is Dish => d !== null)) ?? [];
 
       setRestaurants(enrichedRestaurants);
       setDishes(enrichedDishes);
