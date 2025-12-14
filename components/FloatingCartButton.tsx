@@ -42,7 +42,7 @@ export default function FloatingCartButton() {
         </span>
       </button>
 
-      <CartDrawer open={open} onClose={() => setOpen(false)} />
+      <CartDrawer />
     </>
   );
 }
