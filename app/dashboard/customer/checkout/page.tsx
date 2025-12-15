@@ -91,19 +91,24 @@ export default function CheckoutPage() {
 
       clearCart();
 
-      // 🔔 Notify customer (order placed)
-      await fetch("/api/notify-order", {
+      // 🔔 Customer order confirmation
+      fetch("/api/notify-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId }),
+      }).catch((err) => {
+        console.error("notify-order failed", err);
       });
 
-      // 🔔 Notify home restaurant (new order)
-      await fetch("/api/notify-chef-new-order", {
+      // 🔔 Chef new order notification
+      fetch("/api/notify-chef-new-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId }),
+      }).catch((err) => {
+        console.error("notify-chef-new-order failed", err);
       });
+
 
       window.location.href = SITE_URL + `/dashboard/customer/order-confirmation/${orderId}`;
     } catch (err) {
