@@ -23,7 +23,7 @@ export default function FloatingCartButton() {
   }, []);
 
   const cart = useMemo(() => getCart(), [tick]);
-  const items = Array.isArray(cart.items) ? cart.items : [];
+  const items = cart && Array.isArray(cart.items) ? cart.items : [];
 
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
@@ -42,7 +42,7 @@ export default function FloatingCartButton() {
         </span>
       </button>
 
-      <CartDrawer open={open} onClose={() => setOpen(false)} />
+      <CartDrawer />
     </>
   );
 }
