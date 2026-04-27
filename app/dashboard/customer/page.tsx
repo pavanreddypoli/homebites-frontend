@@ -18,6 +18,7 @@ import {
   ChevronRight,
   House,
   MapPin,
+  Menu,
   Package,
   Search,
   ShoppingBag,
@@ -113,7 +114,7 @@ function getGreeting(user: any): string {
 
 function RestaurantCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[240px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden animate-pulse">
+    <div className="flex-shrink-0 w-[200px] lg:w-[240px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden animate-pulse">
       <div className="h-[150px] bg-slate-100" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-slate-100 rounded w-3/4" />
@@ -127,7 +128,7 @@ function RestaurantCardSkeleton() {
 
 function DishCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[200px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden animate-pulse">
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden animate-pulse">
       <div className="h-[150px] bg-slate-100" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-slate-100 rounded w-3/4" />
@@ -333,7 +334,12 @@ export default function CustomerDashboard() {
 
       {/* ══ TOP NAVBAR ══════════════════════════════════════════════════════ */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#E5E7EB] h-16">
-        <div className="h-full px-6 flex items-center gap-4">
+        <div className="h-full px-4 lg:px-6 flex items-center gap-3 lg:gap-4">
+
+          {/* Hamburger — mobile only */}
+          <button className="lg:hidden text-[#16202B] flex-shrink-0">
+            <Menu size={24} />
+          </button>
 
           {/* Logo */}
           <button
@@ -349,8 +355,8 @@ export default function CustomerDashboard() {
             />
           </button>
 
-          {/* Center: search */}
-          <div className="flex-1 flex justify-center">
+          {/* Center search — desktop only */}
+          <div className="hidden lg:flex flex-1 justify-center">
             <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-full h-10 px-4 w-[400px]">
               <Search size={16} className="text-[#9CA3AF] flex-shrink-0" />
               <input
@@ -363,19 +369,22 @@ export default function CustomerDashboard() {
             </div>
           </div>
 
+          {/* Spacer on mobile so cart stays right */}
+          <div className="flex-1 lg:hidden" />
+
           {/* Right actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Location */}
-            <button className="flex items-center gap-1.5 text-sm font-medium text-[#16202B] whitespace-nowrap">
+          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+            {/* Location — desktop only */}
+            <button className="hidden lg:flex items-center gap-1.5 text-sm font-medium text-[#16202B] whitespace-nowrap">
               <MapPin size={16} className="text-[#FF7A39]" />
               {locationLabel}
             </button>
 
-            {/* Divider */}
-            <span className="text-[#E5E7EB] text-lg select-none">|</span>
+            {/* Divider — desktop only */}
+            <span className="hidden lg:block text-[#E5E7EB] text-lg select-none">|</span>
 
-            {/* Delivery / Pickup toggle */}
-            <div className="flex items-center gap-1">
+            {/* Delivery / Pickup toggle — desktop only */}
+            <div className="hidden lg:flex items-center gap-1">
               <button
                 onClick={() => setOrderMode("delivery")}
                 className={`rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors ${
@@ -398,12 +407,12 @@ export default function CustomerDashboard() {
               </button>
             </div>
 
-            {/* Bell */}
-            <button className="text-[#16202B] hover:text-[#FF7A39] transition-colors">
+            {/* Bell — desktop only */}
+            <button className="hidden lg:block text-[#16202B] hover:text-[#FF7A39] transition-colors">
               <Bell size={22} />
             </button>
 
-            {/* Cart circle */}
+            {/* Cart circle — always visible */}
             <button
               onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
               className="relative w-9 h-9 rounded-full bg-[#FF7A39] flex items-center justify-center flex-shrink-0 hover:bg-[#e06a2e] transition-colors"
@@ -423,8 +432,8 @@ export default function CustomerDashboard() {
       {/* ══ PAGE BODY ════════════════════════════════════════════════════════ */}
       <div className="flex pt-16">
 
-        {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
-        <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-[#E5E7EB] flex flex-col pt-[80px] z-40">
+        {/* ── LEFT SIDEBAR — desktop only ───────────────────────────────── */}
+        <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 bg-white border-r border-[#E5E7EB] flex-col pt-[80px] z-40">
 
           {/* Primary nav */}
           <nav className="flex-1 px-2 space-y-0.5">
@@ -485,11 +494,26 @@ export default function CustomerDashboard() {
         </aside>
 
         {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
-        <main className="ml-60 flex-1 min-h-[calc(100vh-64px)] bg-white">
-          <div className="px-8 py-6">
+        <main className="lg:ml-60 flex-1 min-h-[calc(100vh-64px)] bg-white pb-[68px] lg:pb-0">
+
+          {/* Mobile search bar */}
+          <div className="lg:hidden px-4 pt-3 pb-1">
+            <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-full h-10 px-4">
+              <Search size={16} className="text-[#9CA3AF] flex-shrink-0" />
+              <input
+                type="text"
+                className="flex-1 bg-transparent text-sm text-[#16202B] outline-none placeholder:text-[#9CA3AF]"
+                placeholder="Search HomeBites"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="px-4 lg:px-8 py-4 lg:py-6">
 
             {/* A) Welcome */}
-            <h1 className="text-2xl font-bold text-[#16202B]">
+            <h1 className="text-xl lg:text-2xl font-bold text-[#16202B]">
               {mounted ? getGreeting(user) : "Good morning, hungry?"}
             </h1>
 
@@ -522,7 +546,7 @@ export default function CustomerDashboard() {
             </div>
 
             {/* C) Promo banners */}
-            <div className="grid grid-cols-2 gap-4 mb-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
               {/* Banner 1 */}
               <div
                 className="rounded-2xl p-6 h-[140px] flex flex-col justify-between"
@@ -566,7 +590,7 @@ export default function CustomerDashboard() {
             {/* D) Featured Home Restaurants */}
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[22px] font-bold text-[#16202B]">
+                <h2 className="text-[18px] lg:text-[22px] font-bold text-[#16202B]">
                   Featured Home Restaurants
                 </h2>
                 <button className="text-[14px] text-[#FF7A39] font-medium hover:underline">
@@ -591,7 +615,7 @@ export default function CustomerDashboard() {
                       onClick={() =>
                         (window.location.href = `/dashboard/customer/restaurant/${r.id}`)
                       }
-                      className="flex-shrink-0 w-[240px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden text-left cursor-pointer hover:shadow-md transition-shadow group"
+                      className="flex-shrink-0 w-[200px] lg:w-[240px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden text-left cursor-pointer hover:shadow-md transition-shadow group"
                     >
                       {/* Restaurant image placeholder */}
                       <div className="h-[150px] bg-[#F5F5F5] flex items-end p-3 overflow-hidden">
@@ -625,25 +649,25 @@ export default function CustomerDashboard() {
             {/* E) What's cooking today */}
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[22px] font-bold text-[#16202B]">
+                <h2 className="text-[18px] lg:text-[22px] font-bold text-[#16202B]">
                   What&apos;s cooking today
                 </h2>
                 <div className="flex items-center gap-2">
                   <button className="text-[14px] text-[#FF7A39] font-medium hover:underline mr-2">
                     See all
                   </button>
-                  <button className="w-8 h-8 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] hover:bg-[#F5F5F5] transition-colors">
+                  <button className="hidden lg:flex w-8 h-8 rounded-full border border-[#E5E7EB] items-center justify-center text-[#9CA3AF] hover:bg-[#F5F5F5] transition-colors">
                     <ChevronLeft size={18} />
                   </button>
-                  <button className="w-8 h-8 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] hover:bg-[#F5F5F5] transition-colors">
+                  <button className="hidden lg:flex w-8 h-8 rounded-full border border-[#E5E7EB] items-center justify-center text-[#9CA3AF] hover:bg-[#F5F5F5] transition-colors">
                     <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
 
               {loading ? (
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-                  {Array.from({ length: 6 }).map((_, i) => <DishCardSkeleton key={i} />)}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => <DishCardSkeleton key={i} />)}
                 </div>
               ) : filteredDishes.length === 0 ? (
                 <p className="text-sm text-[#9CA3AF] italic py-4">
@@ -652,13 +676,13 @@ export default function CustomerDashboard() {
                     : "Enable location to see dishes near you."}
                 </p>
               ) : (
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filteredDishes.map((d) => {
                     const qty = getQty(d.id);
                     return (
                       <div
                         key={d.id}
-                        className="flex-shrink-0 w-[200px] bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                        className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
                       >
                         {/* Image + add button */}
                         <div className="relative h-[150px] bg-[#F5F5F5] overflow-hidden">
@@ -730,10 +754,47 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Bottom breathing room */}
-            <div className="h-16" />
+            <div className="h-8 lg:h-16" />
           </div>
         </main>
       </div>
+
+      {/* ── Mobile floating cart bar ──────────────────────────────────────── */}
+      {mounted && cartCount > 0 && (
+        <div className="lg:hidden fixed bottom-[68px] left-4 right-4 z-40">
+          <button
+            onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
+            className="w-full bg-[#FF7A39] text-white rounded-full py-3.5 flex items-center justify-between px-5 shadow-lg hover:bg-[#e06a2e] transition-colors"
+          >
+            <span className="bg-white/20 text-white text-sm font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center">
+              {cartCount}
+            </span>
+            <span className="text-sm font-semibold">View Cart</span>
+            <span className="text-sm font-semibold">${cartTotal.toFixed(2)}</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── Mobile bottom nav bar ─────────────────────────────────────────── */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E7EB] h-[60px] flex items-center">
+        {[
+          { label: "Home",    Icon: House,    href: "/dashboard/customer", active: true  },
+          { label: "Search",  Icon: Search,   href: "#",                   active: false },
+          { label: "Orders",  Icon: Package,  href: "/dashboard/customer", active: false },
+          { label: "Account", Icon: User,     href: user ? "/dashboard" : "/login", active: false },
+        ].map(({ label, Icon, href, active }) => (
+          <button
+            key={label}
+            onClick={() => { if (href !== "#") window.location.href = href; }}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+              active ? "text-[#FF7A39]" : "text-[#9CA3AF] hover:text-[#FF7A39]"
+            }`}
+          >
+            <Icon size={22} />
+            <span className="text-[10px] font-medium">{label}</span>
+          </button>
+        ))}
+      </nav>
 
       {/* CartDrawer — driven by homebites:open-cart event */}
       <CartDrawer />
