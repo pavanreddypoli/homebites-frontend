@@ -424,7 +424,7 @@ export default function CustomerDashboard() {
       <div className="flex pt-16">
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
-        <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-[#E5E7EB] flex flex-col pt-[80px] z-40">
+        <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 bg-white border-r border-[#E5E7EB] flex-col pt-[80px] z-40">
 
           {/* Primary nav */}
           <nav className="flex-1 px-2 space-y-0.5">
@@ -485,7 +485,7 @@ export default function CustomerDashboard() {
         </aside>
 
         {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
-        <main className="ml-60 flex-1 min-h-[calc(100vh-64px)] bg-white">
+        <main className="ml-0 lg:ml-60 flex-1 min-h-[calc(100vh-64px)] bg-white">
           <div className="px-8 py-6">
 
             {/* A) Welcome */}
