@@ -350,7 +350,7 @@ export default function CustomerDashboard() {
           </button>
 
           {/* Center: search */}
-          <div className="flex-1 flex justify-center">
+          <div className="hidden lg:flex flex-1 justify-center">
             <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-full h-10 px-4 w-[400px]">
               <Search size={16} className="text-[#9CA3AF] flex-shrink-0" />
               <input
@@ -365,43 +365,46 @@ export default function CustomerDashboard() {
 
           {/* Right actions */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Location */}
-            <button className="flex items-center gap-1.5 text-sm font-medium text-[#16202B] whitespace-nowrap">
-              <MapPin size={16} className="text-[#FF7A39]" />
-              {locationLabel}
-            </button>
-
-            {/* Divider */}
-            <span className="text-[#E5E7EB] text-lg select-none">|</span>
-
-            {/* Delivery / Pickup toggle */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setOrderMode("delivery")}
-                className={`rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors ${
-                  orderMode === "delivery"
-                    ? "bg-[#16202B] text-white"
-                    : "bg-white text-[#16202B] hover:bg-[#F5F5F5]"
-                }`}
-              >
-                Delivery
+            {/* Location + toggle + bell — desktop only */}
+            <div className="hidden lg:flex items-center gap-3">
+              {/* Location */}
+              <button className="flex items-center gap-1.5 text-sm font-medium text-[#16202B] whitespace-nowrap">
+                <MapPin size={16} className="text-[#FF7A39]" />
+                {locationLabel}
               </button>
-              <button
-                onClick={() => setOrderMode("pickup")}
-                className={`rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors ${
-                  orderMode === "pickup"
-                    ? "bg-[#16202B] text-white"
-                    : "bg-white text-[#16202B] hover:bg-[#F5F5F5]"
-                }`}
-              >
-                Pickup
+
+              {/* Divider */}
+              <span className="text-[#E5E7EB] text-lg select-none">|</span>
+
+              {/* Delivery / Pickup toggle */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setOrderMode("delivery")}
+                  className={`rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors ${
+                    orderMode === "delivery"
+                      ? "bg-[#16202B] text-white"
+                      : "bg-white text-[#16202B] hover:bg-[#F5F5F5]"
+                  }`}
+                >
+                  Delivery
+                </button>
+                <button
+                  onClick={() => setOrderMode("pickup")}
+                  className={`rounded-full px-4 py-1.5 text-[14px] font-semibold transition-colors ${
+                    orderMode === "pickup"
+                      ? "bg-[#16202B] text-white"
+                      : "bg-white text-[#16202B] hover:bg-[#F5F5F5]"
+                  }`}
+                >
+                  Pickup
+                </button>
+              </div>
+
+              {/* Bell */}
+              <button className="text-[#16202B] hover:text-[#FF7A39] transition-colors">
+                <Bell size={22} />
               </button>
             </div>
-
-            {/* Bell */}
-            <button className="text-[#16202B] hover:text-[#FF7A39] transition-colors">
-              <Bell size={22} />
-            </button>
 
             {/* Cart circle */}
             <button
@@ -420,8 +423,16 @@ export default function CustomerDashboard() {
         </div>
       </header>
 
+      {/* Mobile search bar — only visible below lg breakpoint */}
+      <div className="lg:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#E5E7EB] px-4 py-2">
+        <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-full px-4 h-10">
+          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <input type="text" placeholder="Search dishes, cuisines, chefs" className="bg-transparent flex-1 text-sm outline-none" />
+        </div>
+      </div>
+
       {/* ══ PAGE BODY ════════════════════════════════════════════════════════ */}
-      <div className="flex pt-16">
+      <div className="flex pt-28 lg:pt-16">
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
         <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 bg-white border-r border-[#E5E7EB] flex-col pt-[80px] z-40">
