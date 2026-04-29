@@ -12,11 +12,11 @@ import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
 import { getCart, clearCart } from "@/lib/cart";
 import type { Cart } from "@/lib/cart";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Lock, ShoppingBag, Store, AlertCircle } from "lucide-react";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-// ─── Inner form (must live inside <Elements>) ─────────────────────────────────
+/* ─── Inner form ──────────────────────────────────────────────────────────── */
 
 interface CheckoutFormProps {
   cart: Cart;
@@ -95,14 +95,16 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
 
       if (rpcError) {
         console.error("Order creation failed after payment:", rpcError);
-        setError("Payment succeeded but order creation failed. Please contact support with your payment reference.");
+        setError(
+          "Payment succeeded but order creation failed. Please contact support with your payment reference."
+        );
         setPaying(false);
         return;
       }
 
       clearCart();
 
-      // Fire confirmation email — best-effort, don't block navigation on failure
+      // Best-effort confirmation email
       fetch("/api/notify-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,102 +116,149 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Pickup Info */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        <h2 className="font-semibold mb-1">Pickup Details</h2>
-        <p className="text-sm text-slate-600">{cart.restaurant_name}</p>
-        <p className="text-sm text-slate-500">Pickup only</p>
-      </div>
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+      {/* LEFT — forms */}
+      <div className="space-y-5">
+        {/* Pickup */}
+        <Card title="Pickup details" icon={<Store size={16} />}>
+          <p className="text-[14px] font-semibold" style={{ color: "var(--hb-fg)" }}>
+            {cart.restaurant_name}
+          </p>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--hb-fg-muted)" }}>
+            Pickup only · Ready in 25–35 min
+          </p>
+        </Card>
 
-      {/* Order Summary */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        <h2 className="font-semibold mb-4">Order Summary</h2>
-        {cart.items.map((item) => (
-          <div key={item.dish_id} className="flex justify-between mb-2">
-            <span>
-              {item.name} × {item.quantity}
-            </span>
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
+        {/* Contact */}
+        <Card title="Contact information">
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <Field
+              placeholder="First name"
+              value={firstName}
+              onChange={setFirstName}
+              required
+            />
+            <Field
+              placeholder="Last name"
+              value={lastName}
+              onChange={setLastName}
+              required
+            />
           </div>
-        ))}
-        <hr className="my-3" />
-        <div className="flex justify-between text-sm mb-1">
-          <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>Service fee (5%)</span>
-          <span>${serviceFee.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>Estimated tax</span>
-          <span>${tax.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between font-semibold mt-3">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        <h2 className="font-semibold mb-3">Contact Information</h2>
-        <div className="flex gap-3 mb-3">
-          <input
-            type="text"
-            placeholder="First name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
+          <Field
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={setEmail}
             required
+            className="mb-3"
           />
-          <input
-            type="text"
-            placeholder="Last name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
-            required
+          <Field
+            type="tel"
+            placeholder="Phone number (optional)"
+            value={phone}
+            onChange={setPhone}
           />
-        </div>
-        <input
-          type="email"
-          placeholder="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded-md px-3 py-2 mb-3"
-          required
-        />
-        <input
-          type="tel"
-          placeholder="Phone number (optional)"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full border rounded-md px-3 py-2"
-        />
+        </Card>
+
+        {/* Payment */}
+        <Card title="Payment" icon={<Lock size={14} />}>
+          <div
+            className="p-3 rounded-xl"
+            style={{ background: "#FBF7F1", border: "1px solid var(--hb-border-soft)" }}
+          >
+            <PaymentElement />
+          </div>
+          <p className="text-[11.5px] mt-2.5" style={{ color: "var(--hb-fg-muted)" }}>
+            Your payment is secured by Stripe. We don't store your card.
+          </p>
+        </Card>
+
+        {error && (
+          <div
+            className="flex items-start gap-2 p-3.5 rounded-xl text-[13px]"
+            style={{
+              background: "#FEF2F2",
+              border: "1px solid #FCA5A5",
+              color: "#991B1B",
+            }}
+          >
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Mobile pay button */}
+        <button
+          type="submit"
+          disabled={!stripe || paying}
+          className="lg:hidden w-full py-3.5 rounded-full font-bold text-[15px] text-white transition-colors disabled:opacity-60"
+          style={{
+            background: "var(--hb-primary)",
+            boxShadow: "0 4px 14px -2px rgba(255,122,57,.45)",
+          }}
+        >
+          {paying ? "Processing…" : `Pay $${total.toFixed(2)}`}
+        </button>
       </div>
 
-      {/* Payment */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        <h2 className="font-semibold mb-4">Payment</h2>
-        <PaymentElement />
-      </div>
+      {/* RIGHT — sticky summary */}
+      <aside className="lg:sticky lg:top-24 lg:self-start space-y-4">
+        <Card title="Order summary" icon={<ShoppingBag size={14} />}>
+          <div className="space-y-2 mb-3">
+            {cart.items.map((item) => (
+              <div key={item.dish_id} className="flex justify-between text-[13.5px]">
+                <span style={{ color: "var(--hb-fg)" }}>
+                  <b>{item.quantity}×</b> {item.name}
+                </span>
+                <span style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}>
+                  ${(item.price * item.quantity).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <hr style={{ borderColor: "var(--hb-border-soft)" }} />
+          <div
+            className="space-y-1.5 mt-3 text-[13px]"
+            style={{ color: "var(--hb-fg-muted)" }}
+          >
+            <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+            <Row label="Service fee (5%)" value={`$${serviceFee.toFixed(2)}`} />
+            <Row label="Estimated tax" value={`$${tax.toFixed(2)}`} />
+          </div>
+          <div
+            className="flex justify-between font-bold text-[18px] pt-3 mt-3"
+            style={{ color: "var(--hb-fg)", borderTop: "1px solid var(--hb-border-soft)" }}
+          >
+            <span style={{ fontFamily: "var(--font-display)" }}>Total</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>${total.toFixed(2)}</span>
+          </div>
+        </Card>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+        <button
+          type="submit"
+          disabled={!stripe || paying}
+          className="hidden lg:block w-full py-3.5 rounded-full font-bold text-[15px] text-white transition-colors disabled:opacity-60"
+          style={{
+            background: "var(--hb-primary)",
+            boxShadow: "0 4px 14px -2px rgba(255,122,57,.45)",
+          }}
+        >
+          {paying ? "Processing…" : `Pay $${total.toFixed(2)}`}
+        </button>
 
-      <Button type="submit" className="w-full" disabled={!stripe || paying}>
-        {paying ? "Processing…" : `Pay $${total.toFixed(2)}`}
-      </Button>
-
-      <p className="text-xs text-slate-500 mt-3 text-center">
-        Tax and fees are estimates and may vary.
-      </p>
+        <p
+          className="text-[11.5px] text-center"
+          style={{ color: "var(--hb-fg-muted)" }}
+        >
+          Tax and fees are estimates and may vary.
+        </p>
+      </aside>
     </form>
   );
 }
 
-// ─── Outer page shell ─────────────────────────────────────────────────────────
+/* ─── Outer page shell ────────────────────────────────────────────────────── */
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null);
@@ -256,35 +305,24 @@ export default function CheckoutPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading checkout…
-      </div>
-    );
+    return <Shell><Centered text="Loading checkout…" /></Shell>;
   }
-
   if (!cart || !cart.items.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Your cart is empty
-      </div>
+      <Shell>
+        <EmptyCart />
+      </Shell>
     );
   }
-
   if (intentError) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
-        {intentError}
-      </div>
+      <Shell>
+        <Centered text={intentError} tone="error" />
+      </Shell>
     );
   }
-
   if (!clientSecret) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Preparing payment…
-      </div>
-    );
+    return <Shell><Centered text="Preparing payment…" /></Shell>;
   }
 
   const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -293,10 +331,30 @@ export default function CheckoutPage() {
   const total = subtotal + serviceFee + tax;
 
   return (
-    <>
-      <CustomerNav />
-      <div className="min-h-screen bg-slate-50 pt-16">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <Shell>
+      <div className="max-w-[1100px] mx-auto px-4 lg:px-8 py-6 lg:py-10">
+        <button
+          onClick={() => window.history.back()}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold mb-5 px-3 py-1.5 rounded-full transition-colors"
+          style={{
+            color: "var(--hb-fg)",
+            background: "#fff",
+            border: "1px solid var(--hb-border-soft)",
+          }}
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+
+        <h1
+          className="font-bold text-[28px] lg:text-[40px] leading-tight tracking-[-0.025em] mb-1"
+          style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+        >
+          Checkout
+        </h1>
+        <p className="text-[14px] mb-7 lg:mb-8" style={{ color: "var(--hb-fg-muted)" }}>
+          Review your order and pay securely.
+        </p>
+
         <Elements
           stripe={stripePromise}
           options={{ clientSecret, appearance: { theme: "stripe" } }}
@@ -311,7 +369,128 @@ export default function CheckoutPage() {
           />
         </Elements>
       </div>
-    </div>
+    </Shell>
+  );
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <CustomerNav />
+      <div className="min-h-screen pt-14 lg:pt-16" style={{ background: "var(--hb-bg)" }}>
+        {children}
+      </div>
     </>
+  );
+}
+
+function Centered({ text, tone }: { text: string; tone?: "error" }) {
+  return (
+    <div
+      className="min-h-[60vh] flex items-center justify-center px-6 text-center"
+      style={{ color: tone === "error" ? "#991B1B" : "var(--hb-fg-muted)" }}
+    >
+      {text}
+    </div>
+  );
+}
+
+function EmptyCart() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style={{ background: "var(--hb-primary-soft)", color: "var(--hb-primary)" }}
+      >
+        <ShoppingBag size={28} />
+      </div>
+      <h2
+        className="font-bold text-[22px] mb-1"
+        style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+      >
+        Your bag is empty
+      </h2>
+      <p className="text-[14px] mb-5" style={{ color: "var(--hb-fg-muted)" }}>
+        Add a few dishes to start an order.
+      </p>
+      <button
+        onClick={() => (window.location.href = "/dashboard/customer")}
+        className="px-5 py-3 rounded-full font-bold text-[14px] text-white"
+        style={{ background: "var(--hb-primary)" }}
+      >
+        Browse home restaurants
+      </button>
+    </div>
+  );
+}
+
+function Card({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className="bg-white rounded-2xl p-5"
+      style={{
+        border: "1px solid var(--hb-border-soft)",
+        boxShadow: "var(--hb-shadow-soft)",
+      }}
+    >
+      <h3
+        className="flex items-center gap-2 font-bold text-[14px] uppercase tracking-wider mb-3"
+        style={{ color: "var(--hb-fg-muted)", letterSpacing: "0.06em", fontSize: "11.5px" }}
+      >
+        {icon} {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  required,
+  className = "",
+}: {
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  required?: boolean;
+  className?: string;
+}) {
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      required={required}
+      className={`w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors focus:border-[var(--hb-primary)] ${className}`}
+      style={{
+        background: "#FBF7F1",
+        border: "1px solid var(--hb-border-soft)",
+        color: "var(--hb-fg)",
+      }}
+    />
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span>{label}</span>
+      <span style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>
+    </div>
   );
 }

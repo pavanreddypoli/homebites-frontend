@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowLeft, ShoppingBag, ChefHat } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("customer");
+  const [role, setRole] = useState<"customer" | "home_restaurant">("customer");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   async function handleSignup() {
     setLoading(true);
@@ -19,9 +20,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { role }, // 👈 this is what the trigger reads
-      },
+      options: { data: { role } },
     });
 
     if (error) {
@@ -30,101 +29,219 @@ export default function SignupPage() {
       return;
     }
 
+    setSuccess(true);
     setLoading(false);
-    setMessage("Signup successful! Please check your email to verify.");
-
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 1500);
+    setTimeout(() => { window.location.href = "/login"; }, 1500);
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF5EB] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 space-y-4 border border-[#EDE3D2]">
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-[#16202B]">
-            Create Your Account
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-10"
+      style={{
+        background: "linear-gradient(180deg, var(--hb-bg) 0%, var(--hb-bg-warm) 100%)",
+      }}
+    >
+      <div className="w-full max-w-[440px]">
+        <Link
+          href="/dashboard/customer"
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold mb-5"
+          style={{ color: "var(--hb-fg-muted)" }}
+        >
+          <ArrowLeft size={13} /> Back to browse
+        </Link>
+
+        <div
+          className="bg-white rounded-3xl p-7 lg:p-8"
+          style={{
+            border: "1px solid var(--hb-border-soft)",
+            boxShadow: "var(--hb-shadow-card)",
+          }}
+        >
+          <div className="flex items-center gap-2.5 mb-6">
+            <span
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[17px]"
+              style={{ background: "var(--hero-gradient)" }}
+            >
+              H
+            </span>
+            <span
+              className="font-bold text-[20px] tracking-tight"
+              style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+            >
+              HomeBites
+            </span>
+          </div>
+
+          <h1
+            className="font-bold text-[26px] lg:text-[30px] leading-[1.1] tracking-[-0.025em] mb-1"
+            style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+          >
+            Join the table
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Join HomeBites — eat or cook!
+          <p className="text-[14px] mb-6" style={{ color: "var(--hb-fg-muted)" }}>
+            Eat home-cooked food, or share your kitchen with the neighborhood.
           </p>
-        </div>
 
-        <Input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="bg-slate-50"
-        />
-
-        <Input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="bg-slate-50"
-        />
-
-        <div>
-          <label className="text-sm font-medium text-[#16202B] block mb-1.5">
-            I want to…
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
+          {/* Role picker */}
+          <div className="grid grid-cols-2 gap-2.5 mb-4">
+            <RolePill
+              active={role === "customer"}
               onClick={() => setRole("customer")}
-              className={`rounded-xl border-2 p-3 text-sm font-medium transition-colors text-left ${
-                role === "customer"
-                  ? "border-[#FF7A39] bg-[#FF7A39]/5 text-[#FF7A39]"
-                  : "border-[#EDE3D2] text-slate-500"
-              }`}
-            >
-              🛒 Order food
-              <span className="block text-xs font-normal mt-0.5 opacity-70">
-                Browse home cooks
-              </span>
-            </button>
-            <button
-              type="button"
+              icon={<ShoppingBag size={15} />}
+              title="Order food"
+              subtitle="Browse home cooks"
+            />
+            <RolePill
+              active={role === "home_restaurant"}
               onClick={() => setRole("home_restaurant")}
-              className={`rounded-xl border-2 p-3 text-sm font-medium transition-colors text-left ${
-                role === "home_restaurant"
-                  ? "border-[#FF7A39] bg-[#FF7A39]/5 text-[#FF7A39]"
-                  : "border-[#EDE3D2] text-slate-500"
-              }`}
+              icon={<ChefHat size={15} />}
+              title="Become a chef"
+              subtitle="Sell home-cooked meals"
+            />
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSignup();
+            }}
+            className="space-y-3"
+          >
+            <Field
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="email"
+            />
+            <Field
+              type="password"
+              placeholder="Password (min. 6 characters)"
+              value={password}
+              onChange={setPassword}
+              autoComplete="new-password"
+            />
+
+            <button
+              type="submit"
+              disabled={loading || success}
+              className="w-full py-3.5 rounded-full font-bold text-[15px] text-white mt-2 transition-colors disabled:opacity-60"
+              style={{
+                background: success ? "var(--hb-success)" : "var(--hb-primary)",
+                boxShadow: "0 4px 14px -2px rgba(255,122,57,.45)",
+              }}
             >
-              🍳 Become a chef
-              <span className="block text-xs font-normal mt-0.5 opacity-70">
-                Sell home-cooked meals
-              </span>
+              {success
+                ? "Check your inbox →"
+                : loading
+                ? "Creating account…"
+                : "Create account"}
             </button>
+          </form>
+
+          {message && !success && (
+            <p
+              className="text-center text-[13px] mt-3"
+              style={{ color: "#991B1B" }}
+            >
+              {message}
+            </p>
+          )}
+
+          <div
+            className="text-center text-[13px] mt-5"
+            style={{ color: "var(--hb-fg-muted)" }}
+          >
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold"
+              style={{ color: "var(--hb-primary)" }}
+            >
+              Sign in
+            </Link>
           </div>
         </div>
 
-        <Button
-          onClick={handleSignup}
-          disabled={loading}
-          className="w-full bg-[#FF7A39] hover:bg-[#e06a2e] text-white py-3 border-0"
+        <Link
+          href="/dashboard/customer"
+          className="block text-center text-[12.5px] mt-4"
+          style={{ color: "var(--hb-fg-subtle)" }}
         >
-          {loading ? "Creating account…" : "Sign Up"}
-        </Button>
-
-        {message && (
-          <p className="text-center text-sm text-red-600">{message}</p>
-        )}
-
-        <p className="text-center text-xs text-slate-500">
-          Already have an account?{" "}
-          <a href="/login" className="text-[#FF7A39] font-medium hover:underline">
-            Sign In
-          </a>
-        </p>
-        <p className="text-center text-xs text-slate-400">
-          <a href="/dashboard/customer" className="hover:underline">
-            ← Continue as guest
-          </a>
-        </p>
+          Continue as guest →
+        </Link>
       </div>
     </div>
+  );
+}
+
+function RolePill({
+  active,
+  onClick,
+  icon,
+  title,
+  subtitle,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-left p-3.5 rounded-xl transition-all"
+      style={{
+        background: active ? "var(--hb-primary-soft)" : "#FBF7F1",
+        border: active ? "1.5px solid var(--hb-primary)" : "1.5px solid transparent",
+      }}
+    >
+      <span
+        className="flex items-center gap-1.5 mb-1"
+        style={{ color: active ? "var(--hb-primary)" : "var(--hb-fg-muted)" }}
+      >
+        {icon}
+        <span className="text-[13.5px] font-bold">{title}</span>
+      </span>
+      <span
+        className="block text-[11.5px]"
+        style={{ color: active ? "#C24B12" : "var(--hb-fg-subtle)" }}
+      >
+        {subtitle}
+      </span>
+    </button>
+  );
+}
+
+function Field({
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  autoComplete,
+}: {
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete?: string;
+}) {
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      autoComplete={autoComplete}
+      required
+      className="w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors focus:border-[var(--hb-primary)]"
+      style={{
+        background: "#FBF7F1",
+        border: "1px solid var(--hb-border-soft)",
+        color: "var(--hb-fg)",
+      }}
+    />
   );
 }

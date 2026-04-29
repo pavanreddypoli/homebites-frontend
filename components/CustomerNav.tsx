@@ -1,14 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
+import { ShoppingBag, MapPin, Search, ChevronDown } from "lucide-react";
 import { getCartItemCount } from "@/lib/cart";
 
-export default function CustomerNav() {
-  const [user, setUser]         = useState<any>(null);
-  const [mounted, setMounted]   = useState(false);
+/**
+ * Responsive top header used across customer-flow pages.
+ * Matches the design system: brand orange, Fraunces wordmark, soft warm border,
+ * compact on mobile, expanded on desktop with address + nav links.
+ */
+export default function CustomerNav({
+  address,
+  onAddressClick,
+}: {
+  address?: string;
+  onAddressClick?: () => void;
+}) {
+  const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
@@ -25,70 +36,123 @@ export default function CustomerNav() {
   }, [mounted]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-[#EDE3D2] h-14">
-      <div className="h-full max-w-[430px] mx-auto px-4 flex items-center justify-between">
-
-        {/* Logo */}
+    <header
+      className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-md"
+      style={{
+        background: "rgba(255,251,245,0.85)",
+        borderBottom: "1px solid var(--hb-border-soft)",
+      }}
+    >
+      <div className="h-14 lg:h-16 px-4 lg:px-8 flex items-center gap-3 lg:gap-5 max-w-[1400px] mx-auto">
+        {/* Logo + wordmark */}
         <button
           onClick={() => (window.location.href = "/dashboard/customer")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-shrink-0"
         >
-          <Image
-            src="/homebites-logo.png"
-            alt="HomeBites"
-            width={32}
-            height={32}
-            className="h-8 w-auto object-contain rounded-lg"
-          />
-          <span className="font-bold text-[#16202B] text-[15px] tracking-tight">
+          <span
+            className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center text-white font-bold text-base"
+            style={{ background: "var(--hero-gradient)" }}
+          >
+            H
+          </span>
+          <span
+            className="hidden sm:block font-bold text-[16px] lg:text-[19px] tracking-tight"
+            style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+          >
             HomeBites
           </span>
         </button>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-2.5">
-          {/* Become a Chef link */}
-          <a
-            href="/signup"
-            className="text-[11px] font-semibold text-[#FF7A39] hidden sm:block whitespace-nowrap"
-          >
-            🍳 Become a Chef
-          </a>
+        {/* Desktop nav */}
+        <nav className="hidden lg:flex items-center gap-1 ml-2">
+          {["Browse", "How it works"].map((label) => (
+            <button
+              key={label}
+              className="px-3 py-1.5 text-[13.5px] font-medium rounded-md transition-colors"
+              style={{ color: "var(--hb-fg-muted)" }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
 
-          {/* Auth state */}
-          {mounted && (
-            user ? (
-              <button
-                onClick={() => (window.location.href = "/dashboard")}
-                className="text-[#16202B]/60 hover:text-[#16202B] transition-colors"
-                aria-label="Account"
-              >
-                <User size={22} />
-              </button>
-            ) : (
-              <button
-                onClick={() => (window.location.href = "/login")}
-                className="text-[12px] font-semibold text-[#FF7A39] border border-[#FF7A39] rounded-full px-3 py-1 leading-none whitespace-nowrap"
-              >
-                Sign In
-              </button>
-            )
-          )}
+        <div className="flex-1" />
 
-          {/* Cart icon */}
+        {/* Address pill — desktop */}
+        {address && (
           <button
-            onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
-            className="relative text-[#16202B] p-0.5"
-            aria-label="Open cart"
+            onClick={onAddressClick}
+            className="hidden md:flex items-center gap-2 bg-white rounded-full px-3 py-2 text-[13px] font-semibold transition-shadow"
+            style={{
+              border: "1px solid var(--hb-border-soft)",
+              boxShadow: "var(--hb-shadow-soft)",
+              color: "var(--hb-fg)",
+            }}
           >
-            <ShoppingBag size={22} />
-            {mounted && cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#FF7A39] text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-0.5 leading-none">
-                {cartCount > 9 ? "9+" : cartCount}
-              </span>
-            )}
+            <MapPin size={14} style={{ color: "var(--hb-primary)" }} />
+            <span className="max-w-[160px] truncate">{address}</span>
+            <ChevronDown size={13} style={{ color: "var(--hb-fg-subtle)" }} />
           </button>
-        </div>
+        )}
+
+        {/* Restaurant login — desktop only */}
+        <button
+          onClick={() => (window.location.href = "/login")}
+          className="hidden lg:block px-3 py-1.5 text-[13.5px] font-semibold rounded-md transition-colors"
+          style={{ color: "var(--hb-fg-muted)" }}
+        >
+          {mounted && user ? "Account" : "Restaurant login"}
+        </button>
+
+        {/* Become a Home restaurant — desktop only */}
+        <button
+          onClick={() => (window.location.href = "/signup")}
+          className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-colors text-white"
+          style={{
+            background: "var(--hb-fg)",
+          }}
+        >
+          Become a Home restaurant
+        </button>
+
+        {/* Sign In / Account — mobile only */}
+        <button
+          onClick={() => (window.location.href = mounted && user ? "/dashboard" : "/login")}
+          className="lg:hidden px-3 py-1.5 text-[12px] font-semibold rounded-full"
+          style={{
+            color: "var(--hb-primary)",
+            border: "1px solid var(--hb-primary)",
+          }}
+        >
+          {mounted && user ? "Account" : "Sign in"}
+        </button>
+
+        {/* Cart */}
+        <button
+          onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
+          className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{
+            background: "#fff",
+            border: "1px solid var(--hb-border-soft)",
+            boxShadow: "var(--hb-shadow-soft)",
+          }}
+          aria-label="Open cart"
+        >
+          <ShoppingBag size={17} style={{ color: "var(--hb-fg)" }} />
+          {mounted && cartCount > 0 && (
+            <span
+              className="absolute -top-1 -right-1 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 leading-none"
+              style={{
+                background: "var(--hb-accent)",
+                border: "2px solid var(--hb-bg)",
+                fontFamily: "var(--font-mono)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {cartCount > 9 ? "9+" : cartCount}
+            </span>
+          )}
+        </button>
       </div>
     </header>
   );
