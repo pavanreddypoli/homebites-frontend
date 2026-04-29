@@ -87,9 +87,9 @@
 
   /* Fonts (set by next/font in layout.tsx) */
   --font-display: var(--font-fraunces), Georgia, serif;
-  --font-body:    var(--font-jakarta), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-body:    var(--font-inter), -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
-  --font-sans:    var(--font-jakarta), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-sans:    var(--font-inter), -apple-system, "Segoe UI", system-ui, sans-serif;
 
   /* shadcn passthrough */
   --color-background: var(--background);

@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import NavBar from "../NavBar";
+import ChefNav from "@/components/ChefNav";
 
 export default function AddMenuItem() {
   const [name, setName] = useState("");
@@ -20,18 +17,9 @@ export default function AddMenuItem() {
     setUploading(true);
     setMessage("");
 
-    // 1️⃣ Get logged-in user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setMessage("User not logged in."); setUploading(false); return; }
 
-    if (!user) {
-      setMessage("User not logged in.");
-      setUploading(false);
-      return;
-    }
-
-    // 2️⃣ Find this user's Home Restaurant
     const { data: restaurantRow, error: restaurantError } = await supabase
       .from("home_restaurants")
       .select("id")
@@ -45,8 +33,6 @@ export default function AddMenuItem() {
     }
 
     const homeRestaurantId = restaurantRow.id;
-
-    // 3️⃣ Upload image (optional)
     let image_url: string | null = null;
 
     if (imageFile) {
@@ -64,14 +50,10 @@ export default function AddMenuItem() {
         return;
       }
 
-      const { data: urlData } = supabase.storage
-        .from("dish-images")
-        .getPublicUrl(filePath);
-
+      const { data: urlData } = supabase.storage.from("dish-images").getPublicUrl(filePath);
       image_url = urlData.publicUrl;
     }
 
-    // 4️⃣ Insert dish
     const { error } = await supabase.from("dishes").insert({
       home_restaurant_id: homeRestaurantId,
       name,
@@ -81,103 +63,106 @@ export default function AddMenuItem() {
       image_url,
     });
 
-    if (error) {
-      setMessage(error.message);
-      setUploading(false);
-      return;
-    }
-
-    setUploading(false);
+    if (error) { setMessage(error.message); setUploading(false); return; }
     window.location.href = "/dashboard/home-restaurant/menu";
   }
 
+  const fieldClass = "w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors";
+  const fieldStyle = {
+    background: "#F9F6F2",
+    border: "1px solid var(--hb-border)",
+    color: "var(--hb-fg)",
+  };
+  const labelStyle = { color: "var(--hb-fg-muted)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-indigo-900">
+    <div className="min-h-screen" style={{ background: "var(--hb-bg)" }}>
+      <ChefNav />
 
-      {/* ✅ FIXED TOP NAVBAR */}
-      <div className="fixed top-0 left-0 w-full z-50">
-        <NavBar />
-      </div>
-
-      {/* ✅ CONTENT WITH PROPER TOP PADDING */}
-      <div className="flex items-center justify-center px-4 pt-28 pb-10">
-        <div className="w-full max-w-lg bg-white rounded-xl shadow-xl p-6 sm:p-8 space-y-5">
-
-          <h1 className="text-2xl font-bold text-indigo-700 text-center">
-            🍲 Add Menu Item
-          </h1>
-
+      <main className="pt-14 flex items-start justify-center px-4 py-8">
+        <div
+          className="w-full max-w-lg bg-white rounded-2xl p-6 lg:p-8 space-y-5"
+          style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-card)" }}
+        >
           <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Dish Name
-            </label>
-            <Input
-              placeholder="e.g. Ghee Roast Dosa"
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 bg-slate-50"
-            />
+            <h1
+              className="text-[22px] font-bold tracking-tight"
+              style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+            >
+              Add a Dish
+            </h1>
+            <p className="text-[13px] mt-0.5" style={{ color: "var(--hb-fg-muted)" }}>
+              This will appear on your public menu.
+            </p>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Ingredients
-            </label>
-            <Input
-              placeholder="e.g. Rice batter, ghee, spices..."
-              onChange={(e) => setIngredients(e.target.value)}
-              className="mt-1 bg-slate-50"
-            />
+          <div className="space-y-4">
+            {[
+              { label: "Dish Name", placeholder: "e.g. Ghee Roast Dosa", value: name, onChange: setName },
+              { label: "Ingredients", placeholder: "e.g. Rice batter, ghee, spices…", value: ingredients, onChange: setIngredients },
+            ].map(({ label, placeholder, value, onChange }) => (
+              <div key={label}>
+                <label className="block mb-1.5" style={labelStyle}>{label}</label>
+                <input
+                  placeholder={placeholder}
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className={fieldClass}
+                  style={fieldStyle}
+                />
+              </div>
+            ))}
+
+            <div>
+              <label className="block mb-1.5" style={labelStyle}>Description</label>
+              <textarea
+                rows={3}
+                placeholder="Describe the taste, texture, special background…"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className={`${fieldClass} resize-none`}
+                style={fieldStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1.5" style={labelStyle}>Price ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="e.g. 12.99"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={fieldClass}
+                style={fieldStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1.5" style={labelStyle}>Food Photo (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                className="w-full text-[13px] file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[12px] file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Description
-            </label>
-            <Textarea
-              placeholder="Describe the taste, texture, special background..."
-              onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 bg-slate-50"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Price ($)
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              placeholder="e.g. 12.99"
-              onChange={(e) => setPrice(e.target.value)}
-              className="mt-1 bg-slate-50"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Upload Food Photo
-            </label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              className="mt-1 bg-slate-50"
-            />
-          </div>
-
-          <Button
+          <button
             onClick={handleSave}
             disabled={uploading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg shadow-md"
+            className="w-full py-3.5 rounded-full text-[14px] font-semibold text-white transition-colors"
+            style={{ background: uploading ? "var(--hb-fg-subtle)" : "var(--hb-primary)" }}
           >
-            {uploading ? "Saving..." : "Save Dish"}
-          </Button>
+            {uploading ? "Saving…" : "Save Dish"}
+          </button>
 
           {message && (
-            <p className="text-center text-red-500 text-sm">{message}</p>
+            <p className="text-center text-[13px] text-red-600">{message}</p>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

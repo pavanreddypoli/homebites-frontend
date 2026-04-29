@@ -13,6 +13,7 @@ import CartDrawer from "@/components/CartDrawer";
 import CustomerNav from "@/components/CustomerNav";
 import {
   MapPin, Search, Sparkles, Star, Clock, ArrowRight, Plus, Minus, ChefHat,
+  House, Package, User,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -138,6 +139,7 @@ export default function CustomerDashboard() {
   // Cart re-render trigger
   const [cartTick, setCartTick] = useState(0);
   const cartCount = useMemo(() => getCartItemCount(), [cartTick]);
+  const cartTotal = useMemo(() => getCartSubtotal(),  [cartTick]);
   function bumpCart() { setCartTick((v) => v + 1); }
 
   /* ── Cart listener ── */
@@ -694,6 +696,53 @@ export default function CustomerDashboard() {
           </div>
         )}
       </main>
+
+      {/* ── Floating cart bar — mobile only, shows when cart has items ─── */}
+      {mounted && cartCount > 0 && (
+        <div className="lg:hidden fixed bottom-[68px] left-4 right-4 z-40">
+          <button
+            onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
+            className="w-full rounded-full py-4 px-5 flex items-center gap-3 shadow-lg"
+            style={{ background: "var(--hb-primary)" }}
+          >
+            <span
+              className="text-sm font-bold text-white bg-white/20 rounded-full min-w-[26px] h-[26px] flex items-center justify-center px-1.5"
+            >
+              {cartCount}
+            </span>
+            <span className="flex-1 text-[14px] font-bold text-white text-center">
+              View cart
+            </span>
+            <span className="text-[14px] font-bold text-white">
+              ${cartTotal.toFixed(2)}
+            </span>
+            <ArrowRight size={16} color="white" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white flex items-stretch h-[60px]"
+        style={{ borderTop: "1px solid var(--hb-border)" }}
+      >
+        {[
+          { label: "Home",    Icon: House,   href: "/dashboard/customer", active: true  },
+          { label: "Search",  Icon: Search,  href: "#",                   active: false },
+          { label: "Orders",  Icon: Package, href: "/dashboard/customer", active: false },
+          { label: "Account", Icon: User,    href: "/login",              active: false },
+        ].map(({ label, Icon, href, active }) => (
+          <button
+            key={label}
+            onClick={() => { if (href !== "#") window.location.href = href; }}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5"
+            style={{ color: active ? "var(--hb-primary)" : "var(--hb-fg-subtle)" }}
+          >
+            <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+            <span className="text-[10px] font-semibold">{label}</span>
+          </button>
+        ))}
+      </nav>
 
       <CartDrawer />
     </div>

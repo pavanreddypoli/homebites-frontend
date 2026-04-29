@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ NEW
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
+import ChefNav from "@/components/ChefNav";
+import { RefreshCw } from "lucide-react";
 
 type Order = {
   id: string;
@@ -20,89 +20,62 @@ type OrderItem = {
   order_id?: string;
 };
 
-export default function HomeRestaurantOrdersPage() {
-  const router = useRouter(); // ✅ NEW
+const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
+  placed:    { bg: "#FFF8E1", color: "#B45309", label: "Placed"    },
+  ready:     { bg: "#E0F2FE", color: "#0369A1", label: "Ready"     },
+  completed: { bg: "#DCFCE7", color: "#15803D", label: "Completed" },
+};
 
+export default function HomeRestaurantOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [itemsByOrder, setItemsByOrder] = useState<Record<string, OrderItem[]>>(
-    {}
-  );
+  const [itemsByOrder, setItemsByOrder] = useState<Record<string, OrderItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [updatingIds, setUpdatingIds] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+  useEffect(() => { loadOrders(); }, []);
 
   async function loadOrders() {
     setLoading(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data: restaurant } = await supabase
-      .from("home_restaurants")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!restaurant) return;
+      .from("home_restaurants").select("id").eq("user_id", user.id).single();
+    if (!restaurant) { setLoading(false); return; }
 
     const { data: ordersData } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("restaurant_id", restaurant.id)
+      .from("orders").select("*").eq("restaurant_id", restaurant.id)
       .order("created_at", { ascending: false });
 
     setOrders(ordersData || []);
 
     const orderIds = (ordersData || []).map((o) => o.id);
-
     if (orderIds.length > 0) {
       const { data: items } = await supabase
-        .from("order_items")
-        .select("*")
-        .in("order_id", orderIds);
-
+        .from("order_items").select("*").in("order_id", orderIds);
       const grouped: Record<string, OrderItem[]> = {};
       items?.forEach((item: any) => {
         if (!grouped[item.order_id]) grouped[item.order_id] = [];
         grouped[item.order_id].push(item);
       });
-
       setItemsByOrder(grouped);
-    } else {
-      setItemsByOrder({});
     }
-
     setLoading(false);
   }
 
   async function updateStatus(orderId: string, status: string) {
     setUpdatingIds((prev) => ({ ...prev, [orderId]: true }));
-
     const prevOrders = orders;
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
-    );
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", orderId);
-
+    const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
     if (error) {
-      console.error(error);
       setOrders(prevOrders);
       alert("Failed to update order");
       setUpdatingIds((prev) => ({ ...prev, [orderId]: false }));
       return;
     }
 
-    // ✅ Notify customer when order is READY
     if (status === "ready") {
       fetch("/api/notify-customer-order-ready", {
         method: "POST",
@@ -110,160 +83,131 @@ export default function HomeRestaurantOrdersPage() {
         body: JSON.stringify({ orderId }),
       }).catch(() => {});
     }
-
     setUpdatingIds((prev) => ({ ...prev, [orderId]: false }));
   }
 
-  const statusBadge = (status: string) => {
-    if (status === "placed") return "bg-yellow-100 text-yellow-800";
-    if (status === "ready") return "bg-blue-100 text-blue-800";
-    if (status === "completed") return "bg-green-100 text-green-800";
-    return "bg-slate-100 text-slate-700";
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading orders…
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--hb-bg)" }}>
+        <p className="text-[15px] animate-pulse" style={{ color: "var(--hb-fg-muted)" }}>Loading orders…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen" style={{ background: "var(--hb-bg)" }}>
+      <ChefNav />
 
-        {/* ✅ NEW: Top Navigation */}
+      <main className="pt-14 max-w-[1100px] mx-auto px-4 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1
+              className="text-[24px] lg:text-[30px] font-bold tracking-tight"
+              style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+            >
+              Incoming Orders
+            </h1>
+            <p className="text-[13px] mt-0.5" style={{ color: "var(--hb-fg-muted)" }}>
+              {orders.length} total order{orders.length !== 1 ? "s" : ""}
+            </p>
+          </div>
           <button
-            onClick={() => router.push("/dashboard/home-restaurant")}
-            className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-2"
+            onClick={loadOrders}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[13px] font-semibold transition-colors"
+            style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border)", background: "#fff" }}
           >
-            ← Back to Dashboard
+            <RefreshCw size={13} /> Refresh
           </button>
         </div>
 
-        {/* Existing Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">
-              Incoming Orders
-            </h1>
-            <p className="text-slate-500 text-sm">
-              Manage and prepare customer orders
-            </p>
-          </div>
-
-          <Button
-            onClick={loadOrders}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        {orders.length === 0 ? (
+          <div
+            className="rounded-2xl py-16 px-6 text-center"
+            style={{ background: "#fff", border: "1px dashed var(--hb-border)" }}
           >
-            Refresh
-          </Button>
-        </div>
-
-        {orders.length === 0 && (
-          <p className="text-slate-500">No orders yet.</p>
-        )}
-
-        {orders.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-md overflow-x-auto">
+            <p className="text-[15px]" style={{ color: "var(--hb-fg-muted)" }}>No orders yet.</p>
+          </div>
+        ) : (
+          <div
+            className="bg-white rounded-2xl overflow-x-auto"
+            style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
+          >
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-slate-700">
-                <tr>
-                  <th className="px-4 py-3 text-left">Order #</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Time</th>
-                  <th className="px-4 py-3 text-left">Customer</th>
-                  <th className="px-4 py-3 text-left">Items</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--hb-border)", background: "#FAFAF9" }}>
+                  {["Order #", "Date / Time", "Customer", "Items", "Total", "Status", "Action"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide"
+                      style={{ color: "var(--hb-fg-muted)" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-
               <tbody>
                 {orders.map((order) => {
                   const dt = new Date(order.created_at);
                   const items = itemsByOrder[order.id] || [];
                   const isUpdating = !!updatingIds[order.id];
+                  const s = STATUS_STYLES[order.status] ?? { bg: "#F3F4F6", color: "#374151", label: order.status };
 
                   return (
                     <tr
                       key={order.id}
-                      className="border-t hover:bg-indigo-50 transition"
+                      className="transition-colors hover:bg-[#FAFAF9]"
+                      style={{ borderBottom: "1px solid var(--hb-border-soft)" }}
                     >
-                      <td className="px-4 py-3 font-semibold">
+                      <td className="px-4 py-3 font-mono text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
                         #{order.id.slice(0, 8)}
                       </td>
-
-                      <td className="px-4 py-3">
-                        {dt.toLocaleDateString()}
+                      <td className="px-4 py-3 text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
+                        {dt.toLocaleDateString()}<br />
+                        <span className="text-[11px]">{dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                       </td>
-
-                      <td className="px-4 py-3">
-                        {dt.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-[13px] font-medium" style={{ color: "var(--hb-fg)" }}>
                         {order.customer_name || "Guest"}
                       </td>
-
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
                         {items.map((item) => (
-                          <div key={item.id}>
-                            {item.dish_name} × {item.quantity}
-                          </div>
+                          <div key={item.id}>{item.dish_name} × {item.quantity}</div>
                         ))}
                       </td>
-
-                      <td className="px-4 py-3 text-right font-bold">
+                      <td className="px-4 py-3 text-[13px] font-bold" style={{ color: "var(--hb-fg)" }}>
                         ${order.total.toFixed(2)}
                       </td>
-
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${statusBadge(
-                            order.status
-                          )}`}
+                          className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                          style={{ background: s.bg, color: s.color }}
                         >
-                          {order.status}
+                          {s.label}
                         </span>
                       </td>
-
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3">
                         {order.status === "placed" && (
-                          <Button
-                            size="sm"
+                          <button
                             disabled={isUpdating}
-                            onClick={() =>
-                              updateStatus(order.id, "ready")
-                            }
+                            onClick={() => updateStatus(order.id, "ready")}
+                            className="px-3 py-1.5 rounded-full text-[12px] font-semibold text-white"
+                            style={{ background: "var(--hb-primary)" }}
                           >
                             Mark Ready
-                          </Button>
+                          </button>
                         )}
-
                         {order.status === "ready" && (
-                          <Button
-                            size="sm"
-                            variant="secondary"
+                          <button
                             disabled={isUpdating}
-                            onClick={() =>
-                              updateStatus(order.id, "completed")
-                            }
+                            onClick={() => updateStatus(order.id, "completed")}
+                            className="px-3 py-1.5 rounded-full text-[12px] font-semibold"
+                            style={{ background: "#DCFCE7", color: "#15803D" }}
                           >
                             Mark Completed
-                          </Button>
+                          </button>
                         )}
-
                         {order.status === "completed" && (
-                          <span className="text-green-600 font-semibold">
-                            ✓ Completed
-                          </span>
+                          <span className="text-[12px] font-semibold" style={{ color: "#15803D" }}>✓ Done</span>
                         )}
                       </td>
                     </tr>
@@ -273,7 +217,7 @@ export default function HomeRestaurantOrdersPage() {
             </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
