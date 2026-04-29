@@ -1,26 +1,23 @@
 import type { Metadata } from "next";
-import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import ClientShell from "@/components/ClientShell";
 
 const fraunces = Fraunces({
-  variable: "--font-fraunces",
   subsets: ["latin"],
-  axes: ["opsz"],
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
   subsets: ["latin"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -37,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${jakarta.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
         <ClientShell />
