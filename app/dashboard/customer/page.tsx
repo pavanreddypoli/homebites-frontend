@@ -682,7 +682,7 @@ export default function CustomerDashboard() {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4">
             {dishesNear.map((d) => (
               <DishCard
                 key={d.id}
@@ -776,7 +776,7 @@ function SectionHeader({
   action?: string;
 }) {
   return (
-    <div className="flex items-end justify-between gap-4 mt-8 lg:mt-12 mb-4 lg:mb-5">
+    <div className="flex items-center justify-between gap-4 mt-6 lg:mt-12 mb-3 lg:mb-5">
       <div className="min-w-0">
         {kicker && (
           <div
@@ -787,14 +787,14 @@ function SectionHeader({
           </div>
         )}
         <h2
-          className="font-bold text-[22px] lg:text-[32px] tracking-[-0.025em] leading-tight"
+          className="font-bold text-[16px] lg:text-[32px] tracking-[-0.025em] leading-tight"
           style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
         >
           {title}
         </h2>
         {subtitle && (
           <div
-            className="text-[12.5px] lg:text-[14px] mt-1"
+            className="hidden lg:block text-[14px] mt-1"
             style={{ color: "var(--hb-fg-muted)" }}
           >
             {subtitle}
@@ -803,10 +803,10 @@ function SectionHeader({
       </div>
       {action && (
         <button
-          className="hidden sm:flex items-center gap-1 text-[13px] lg:text-[14px] font-semibold whitespace-nowrap"
+          className="flex items-center gap-0.5 text-[13px] font-semibold whitespace-nowrap flex-shrink-0"
           style={{ color: "var(--hb-primary)" }}
         >
-          {action} <ArrowRight size={13} />
+          {action} <span className="text-[15px] leading-none">›</span>
         </button>
       )}
     </div>
@@ -817,34 +817,63 @@ function RestaurantCard({ r }: { r: Restaurant }) {
   return (
     <button
       onClick={() => (window.location.href = `/dashboard/customer/restaurant/${r.id}`)}
-      className="flex-shrink-0 w-[260px] lg:w-[280px] bg-white rounded-2xl text-left transition-all overflow-hidden hover:-translate-y-0.5"
+      className="flex-shrink-0 w-[110px] lg:w-[280px] bg-white rounded-2xl text-left transition-all overflow-hidden hover:-translate-y-0.5"
       style={{
         border: "1px solid var(--hb-border-soft)",
         boxShadow: "var(--hb-shadow-soft)",
       }}
     >
-      <CuisineEmojiBg cuisine={r.cuisine} className="h-[150px]" />
-      <div className="p-3.5">
-        <div className="flex items-start justify-between gap-2">
+      {/* Image + deal badge */}
+      <div className="relative">
+        <CuisineEmojiBg cuisine={r.cuisine} className="h-[80px] lg:h-[150px]" />
+        {/* Deal badge — mobile only */}
+        <span
+          className="lg:hidden absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white leading-none"
+          style={{ background: "var(--hb-primary)" }}
+        >
+          Free delivery
+        </span>
+      </div>
+
+      <div className="p-2 lg:p-3.5">
+        {/* Name row */}
+        <div className="flex items-start justify-between gap-1">
           <p
-            className="text-[15px] font-bold truncate"
+            className="text-[11px] lg:text-[15px] font-semibold lg:font-bold truncate flex-1"
             style={{ color: "var(--hb-fg)" }}
           >
             {r.name}
           </p>
+          {/* Rating — desktop only, beside name */}
           <span
-            className="flex items-center gap-0.5 text-[12px] font-bold whitespace-nowrap"
+            className="hidden lg:flex items-center gap-0.5 text-[12px] font-bold whitespace-nowrap"
             style={{ color: "var(--hb-fg)" }}
           >
             <Star size={11} fill="#FFB400" stroke="#FFB400" />
             4.9
           </span>
         </div>
-        <p className="text-[12.5px] mt-0.5" style={{ color: "var(--hb-primary)" }}>
+
+        {/* Cuisine — desktop only */}
+        <p className="hidden lg:block text-[12.5px] mt-0.5" style={{ color: "var(--hb-primary)" }}>
           {r.cuisine}
         </p>
+
+        {/* Rating + distance — mobile only */}
         <div
-          className="flex items-center gap-2 text-[12px] mt-2"
+          className="lg:hidden flex items-center gap-1 mt-0.5"
+          style={{ color: "var(--hb-fg-subtle)" }}
+        >
+          <Star size={9} fill="#FFB400" stroke="#FFB400" />
+          <span className="text-[10px]">4.9</span>
+          {r.distance_km != null && (
+            <span className="text-[10px]">· {kmToMi(r.distance_km).toFixed(1)} mi</span>
+          )}
+        </div>
+
+        {/* Distance + time — desktop only */}
+        <div
+          className="hidden lg:flex items-center gap-2 text-[12px] mt-2"
           style={{ color: "var(--hb-fg-muted)" }}
         >
           <span className="flex items-center gap-1">
@@ -873,13 +902,14 @@ function DishCard({
 }) {
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
+      className="flex-shrink-0 w-[100px] lg:w-auto bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
       style={{
         border: "1px solid var(--hb-border-soft)",
         boxShadow: "var(--hb-shadow-soft)",
       }}
     >
-      <div className="relative aspect-square bg-[#F5F2ED] overflow-hidden">
+      {/* Image */}
+      <div className="relative h-[90px] lg:h-auto lg:aspect-square bg-[#F5F2ED] overflow-hidden">
         {d.image_url ? (
           <img
             src={d.image_url}
@@ -889,23 +919,43 @@ function DishCard({
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-5xl"
-            style={{
-              background: "linear-gradient(135deg, #FFF1E3 0%, #FFE4CB 100%)",
-            }}
+            className="w-full h-full flex items-center justify-center text-3xl lg:text-5xl"
+            style={{ background: "linear-gradient(135deg, #FFF1E3 0%, #FFE4CB 100%)" }}
             onClick={() => (window.location.href = `/dashboard/customer/restaurant/${d.home_restaurant_id}`)}
           >
             {CUISINE_EMOJI[d.restaurant_cuisine ?? ""] ?? "🍽️"}
           </div>
         )}
 
+        {/* Qty badge — mobile only, top-left orange circle */}
+        {qty > 0 && (
+          <div
+            className="lg:hidden absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white leading-none"
+            style={{ background: "var(--hb-primary)" }}
+          >
+            {qty}
+          </div>
+        )}
+
+        {/* "+" button — mobile only, 24px circle, always shown */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          className="lg:hidden absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-white flex items-center justify-center transition-colors"
+          style={{
+            border: "1px solid var(--hb-border-soft)",
+            boxShadow: "var(--hb-shadow-soft)",
+            color: "var(--hb-primary)",
+          }}
+          aria-label={`Add ${d.name}`}
+        >
+          <Plus size={12} strokeWidth={2.5} />
+        </button>
+
+        {/* Desktop: stepper or "+" */}
         {qty > 0 ? (
           <div
-            className="absolute bottom-2 right-2 flex items-center gap-1 bg-white rounded-full px-1.5 py-1"
-            style={{
-              border: "1px solid var(--hb-border-soft)",
-              boxShadow: "var(--hb-shadow-soft)",
-            }}
+            className="hidden lg:flex absolute bottom-2 right-2 items-center gap-1 bg-white rounded-full px-1.5 py-1"
+            style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
           >
             <button
               onClick={(e) => { e.stopPropagation(); onDec(); }}
@@ -931,7 +981,7 @@ function DishCard({
         ) : (
           <button
             onClick={(e) => { e.stopPropagation(); onAdd(); }}
-            className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white flex items-center justify-center transition-colors"
+            className="hidden lg:flex absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white items-center justify-center transition-colors"
             style={{
               border: "1px solid var(--hb-border-soft)",
               boxShadow: "var(--hb-shadow-soft)",
@@ -944,23 +994,39 @@ function DishCard({
         )}
       </div>
 
+      {/* Card body */}
       <div
-        className="p-3 cursor-pointer"
+        className="p-1.5 lg:p-3 cursor-pointer"
         onClick={() => (window.location.href = `/dashboard/customer/restaurant/${d.home_restaurant_id}`)}
       >
         <p
-          className="text-[14px] font-bold leading-tight line-clamp-1"
+          className="text-[11px] lg:text-[14px] font-bold leading-tight line-clamp-1"
           style={{ color: "var(--hb-fg)" }}
         >
           {d.name}
         </p>
+
+        {/* Restaurant name — desktop only */}
         <p
-          className="text-[11.5px] font-medium mt-0.5 truncate"
+          className="hidden lg:block text-[11.5px] font-medium mt-0.5 truncate"
           style={{ color: "var(--hb-primary)" }}
         >
           {d.restaurant_name}
         </p>
-        <div className="flex items-center justify-between mt-2">
+
+        {/* Mobile: price + delivery time */}
+        <div className="lg:hidden flex items-center gap-1 mt-1">
+          <span
+            className="text-[11px] font-bold"
+            style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}
+          >
+            ${d.price.toFixed(2)}
+          </span>
+          <span className="text-[10px]" style={{ color: "var(--hb-fg-subtle)" }}>· 25 min</span>
+        </div>
+
+        {/* Desktop: price + distance */}
+        <div className="hidden lg:flex items-center justify-between mt-2">
           <p
             className="text-[14px] font-bold"
             style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}
@@ -981,18 +1047,17 @@ function DishCard({
 function CardRowSkeleton({ kind }: { kind: "restaurant" | "dish" }) {
   if (kind === "restaurant") {
     return (
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-[260px] bg-white rounded-2xl overflow-hidden animate-pulse"
+            className="flex-shrink-0 w-[110px] lg:w-[280px] bg-white rounded-2xl overflow-hidden animate-pulse"
             style={{ border: "1px solid var(--hb-border-soft)" }}
           >
-            <div className="h-[150px] bg-[#F0EBE3]" />
-            <div className="p-3.5 space-y-2">
-              <div className="h-4 bg-[#F0EBE3] rounded w-3/4" />
-              <div className="h-3 bg-[#F0EBE3] rounded w-1/2" />
-              <div className="h-3 bg-[#F0EBE3] rounded w-2/3" />
+            <div className="h-[80px] lg:h-[150px] bg-[#F0EBE3]" />
+            <div className="p-2 lg:p-3.5 space-y-1.5">
+              <div className="h-3 lg:h-4 bg-[#F0EBE3] rounded w-3/4" />
+              <div className="h-2.5 lg:h-3 bg-[#F0EBE3] rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -1000,17 +1065,17 @@ function CardRowSkeleton({ kind }: { kind: "restaurant" | "dish" }) {
     );
   }
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-2xl overflow-hidden animate-pulse"
+          className="flex-shrink-0 w-[100px] lg:w-auto bg-white rounded-2xl overflow-hidden animate-pulse"
           style={{ border: "1px solid var(--hb-border-soft)" }}
         >
-          <div className="aspect-square bg-[#F0EBE3]" />
-          <div className="p-3 space-y-2">
-            <div className="h-3.5 bg-[#F0EBE3] rounded w-3/4" />
-            <div className="h-3 bg-[#F0EBE3] rounded w-1/2" />
+          <div className="h-[90px] lg:h-auto lg:aspect-square bg-[#F0EBE3]" />
+          <div className="p-1.5 lg:p-3 space-y-1.5">
+            <div className="h-3 bg-[#F0EBE3] rounded w-3/4" />
+            <div className="h-2.5 bg-[#F0EBE3] rounded w-1/2" />
           </div>
         </div>
       ))}
