@@ -101,6 +101,13 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 `CartDrawer` is mounted globally via `ClientShell` in the root layout. The customer pages also mount it directly (harmless duplicate — both listen to the same events).
 
+## Database Notes
+
+- **`home_restaurants.id` is FK → `auth.users(id) ON DELETE CASCADE`** — restaurant ID equals the auth user ID. There is no separate `user_id` column. Constraint name: `home_restaurants_id_fkey`.
+- **Test data:** 20 restaurants seeded across 15 US cities. Auth users and restaurants share the same `feed0001-feed-feed-feed-feed000000NN` UUIDs. See `homebites-frontend/scripts/seed-test-data-working.sql` for the verified seed script.
+- **`reviews` table:** created with RLS enabled. One review per order enforced via unique index on `order_id`. See `supabase/migrations/add_ratings.sql`.
+- **`is_open` and `closed_message` columns** added to `home_restaurants` for the chef availability toggle.
+
 ## Supabase Patterns
 
 - Always call `supabase.auth.getUser()` (not `getSession()`) to get the current user on the client.
@@ -127,7 +134,7 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - When adding a new page under `home-restaurant/`, add its link to `NavBar.tsx`.
 - After editing cart logic in `lib/cart.ts`, verify both the customer dashboard inline +/− and the CartDrawer still work correctly.
 
-## Current Status — Last updated: May 1, 2026
+## Current Status — Last updated: May 2, 2026
 
 ### ✅ Week 1 — DONE
 - RLS policies on all 4 Supabase tables
@@ -162,12 +169,12 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - ❌ Error boundaries not done
 - ❌ window.location.href replacements not complete
 
-### ⬜ Weeks 5-6 — NOT STARTED (next priority)
-- Chef availability toggle (open/closed)
-- Real-time order status (Supabase Realtime)
-- Ratings & reviews
-- Chef earnings summary
-- Customer order history page
+### ✅ Weeks 5-6 — DONE
+- ✅ Chef availability toggle (open/closed) with real-time status + closed message
+- ✅ Real-time order status (Supabase Realtime) — chef orders page + customer order confirmation
+- ✅ Ratings & reviews (reviews table, post-order review form, ratings on restaurant cards + detail + chef dashboard)
+- ✅ Customer order history page (/dashboard/customer/orders) with Reorder + Track buttons
+- ❌ Chef earnings summary — not done
 
 ### ⬜ Week 7 — NOT STARTED
 - AI search (Anthropic API)
@@ -178,7 +185,7 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Last session we completed Weeks 1-2 fully and most of Weeks 3-4. Next priority is Week 5-6: chef availability toggle, then real-time orders, then ratings."
+2. Tell Pavan: "Ready to continue. Weeks 1-6 are complete. Next priority is Week 7: AI search (Anthropic API) and AI menu description writer."
 3. Ask Pavan: "Which do you want to start with today?"
 
 ## Git Rules
