@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# one-time data scripts — not part of the app
+scripts/diversify-seed-images.ts
