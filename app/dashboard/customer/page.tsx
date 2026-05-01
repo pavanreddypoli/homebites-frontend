@@ -138,6 +138,7 @@ export default function CustomerDashboard() {
   const [selectedCuisine, setSelectedCuisine] = useState<string>("All");
   const [searchQuery, setSearchQuery]         = useState("");
   const [radiusMi, setRadiusMi]               = useState(5);
+  const [showAll, setShowAll]                 = useState(false);
 
   // Data
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -199,7 +200,15 @@ export default function CustomerDashboard() {
         if (typeof parsed.radiusMi === "number") setRadiusMi(parsed.radiusMi);
       } catch {}
     }
+    if (localStorage.getItem("homebites_show_all_restaurants") === "true") {
+      setShowAll(true);
+    }
   }, []);
+
+  /* ── Persist nationwide toggle ── */
+  useEffect(() => {
+    localStorage.setItem("homebites_show_all_restaurants", String(showAll));
+  }, [showAll]);
 
   /* ── Auto geolocation (only if not saved) ── */
   useEffect(() => {
@@ -421,10 +430,10 @@ export default function CustomerDashboard() {
   /* ── Filtering ── */
   const radiusKm = miToKm(radiusMi);
 
-  // Restaurants within selected radius (or all if no location yet)
+  // Restaurants within selected radius (or all if no location yet, or showAll)
   const restaurantsNear = useMemo(() => {
     let list = restaurants;
-    if (location) {
+    if (location && !showAll) {
       list = list.filter((r) => r.distance_km == null || r.distance_km <= radiusKm);
     }
     if (selectedCuisine !== "All") {
@@ -441,11 +450,11 @@ export default function CustomerDashboard() {
       );
     }
     return list;
-  }, [restaurants, selectedCuisine, searchQuery, radiusKm, location]);
+  }, [restaurants, selectedCuisine, searchQuery, radiusKm, location, showAll]);
 
   const dishesNear = useMemo(() => {
     let list = dishes;
-    if (location) {
+    if (location && !showAll) {
       list = list.filter((d) => d.distance_km == null || d.distance_km <= radiusKm);
     }
     if (selectedCuisine !== "All") {
@@ -466,7 +475,7 @@ export default function CustomerDashboard() {
       );
     }
     return list;
-  }, [dishes, selectedCuisine, searchQuery, radiusKm, location]);
+  }, [dishes, selectedCuisine, searchQuery, radiusKm, location, showAll]);
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
 
@@ -663,7 +672,10 @@ export default function CustomerDashboard() {
               </div>
 
               {/* Radius slider */}
-              <div className="px-1 pt-3.5 pb-1">
+              <div
+                className="px-1 pt-3.5 pb-1 transition-opacity"
+                style={{ opacity: showAll ? 0.4 : 1, pointerEvents: showAll ? "none" : "auto" }}
+              >
                 <div className="flex justify-between items-center mb-2">
                   <span
                     className="text-[10.5px] font-bold uppercase tracking-wider"
@@ -699,6 +711,39 @@ export default function CustomerDashboard() {
                   <span>0.5 mi</span>
                   <span>30 mi</span>
                 </div>
+              </div>
+
+              {/* Nationwide toggle */}
+              <div
+                className="flex items-center justify-between gap-3 mt-3.5 px-1 py-2.5"
+                style={{ borderTop: "1px solid rgba(11,19,28,.06)" }}
+              >
+                <div className={showAll ? "" : ""}>
+                  <p
+                    className="text-[12.5px] font-semibold"
+                    style={{ color: "var(--hb-fg)" }}
+                  >
+                    Show all restaurants nationwide
+                  </p>
+                  <p className="text-[11px]" style={{ color: "var(--hb-fg-muted)" }}>
+                    Ignores distance filter
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAll((v) => !v)}
+                  aria-label={showAll ? "Disable nationwide view" : "Enable nationwide view"}
+                  className="relative flex-shrink-0 transition-colors duration-200 rounded-full"
+                  style={{
+                    width: 44,
+                    height: 24,
+                    background: showAll ? "var(--hb-primary)" : "#D1D5DB",
+                  }}
+                >
+                  <span
+                    className="absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
+                    style={{ transform: showAll ? "translateX(23px)" : "translateX(3px)" }}
+                  />
+                </button>
               </div>
 
               {/* Search input + button */}
@@ -737,9 +782,20 @@ export default function CustomerDashboard() {
                 className="px-1 pt-3 text-[12px]"
                 style={{ color: "var(--hb-fg-muted)" }}
               >
-                <b style={{ color: "var(--hb-fg)" }}>{restaurantsNear.length}</b> home restaurants ·{" "}
-                <b style={{ color: "var(--hb-fg)" }}>{dishesNear.length}</b> dishes within{" "}
-                <b style={{ color: "var(--hb-primary)" }}>{radiusMi.toFixed(1)} mi</b>
+                {showAll ? (
+                  location ? (
+                    <><b style={{ color: "var(--hb-fg)" }}>{restaurantsNear.length}</b> home restaurants ·{" "}
+                    <b style={{ color: "var(--hb-fg)" }}>{dishesNear.length}</b> dishes{" "}
+                    <b style={{ color: "var(--hb-primary)" }}>nationwide</b></>
+                  ) : (
+                    <><b style={{ color: "var(--hb-fg)" }}>{restaurantsNear.length}</b> home restaurants ·{" "}
+                    <b style={{ color: "var(--hb-fg)" }}>{dishesNear.length}</b> dishes</>
+                  )
+                ) : (
+                  <><b style={{ color: "var(--hb-fg)" }}>{restaurantsNear.length}</b> home restaurants ·{" "}
+                  <b style={{ color: "var(--hb-fg)" }}>{dishesNear.length}</b> dishes within{" "}
+                  <b style={{ color: "var(--hb-primary)" }}>{radiusMi.toFixed(1)} mi</b></>
+                )}
               </div>
             </div>
 
@@ -860,9 +916,13 @@ export default function CustomerDashboard() {
         {/* Home restaurants near you — radius-filtered */}
         <div id="near-you" className="scroll-mt-24">
           <SectionHeader
-            title="Home restaurants near you"
+            title={showAll ? "All home restaurants" : "Home restaurants near you"}
             kicker="Featured"
-            subtitle={location ? `Within ${radiusMi.toFixed(1)} mi of ${locationLabel}` : "Enable location to filter by distance"}
+            subtitle={
+              showAll
+                ? location ? `Showing all restaurants nationwide · distances from ${locationLabel}` : "Showing all restaurants nationwide"
+                : location ? `Within ${radiusMi.toFixed(1)} mi of ${locationLabel}` : "Enable location to filter by distance"
+            }
             action="View all"
           />
           {loading ? (
