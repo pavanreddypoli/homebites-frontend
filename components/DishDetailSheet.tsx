@@ -130,6 +130,7 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
   }
 
   function handleAddToCart() {
+    if (!dish) return;
     const inCart = cartQty > 0;
     if (inCart) {
       updateItemQuantity(dish.id, qty);
