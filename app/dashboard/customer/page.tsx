@@ -11,6 +11,7 @@ import {
 } from "@/lib/cart";
 import CartDrawer from "@/components/CartDrawer";
 import CustomerNav from "@/components/CustomerNav";
+import DishDetailSheet, { type SheetDish } from "@/components/DishDetailSheet";
 import {
   MapPin, Search, Sparkles, Star, Clock, ArrowRight, Plus, Minus, ChefHat,
   House, Package, User, X,
@@ -135,6 +136,9 @@ export default function CustomerDashboard() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [dishes, setDishes]           = useState<Dish[]>([]);
   const [loading, setLoading]         = useState(true);
+
+  // Dish detail sheet
+  const [selectedDish, setSelectedDish] = useState<SheetDish | null>(null);
 
   // Cart re-render trigger
   const [cartTick, setCartTick] = useState(0);
@@ -703,6 +707,16 @@ export default function CustomerDashboard() {
                 onAdd={() => addToCart(d)}
                 onInc={() => addToCart(d)}
                 onDec={() => setInlineQty(d.id, getQty(d.id) - 1)}
+                onOpenSheet={() => setSelectedDish({
+                  id: d.id,
+                  name: d.name,
+                  description: d.description,
+                  price: d.price,
+                  image_url: d.image_url,
+                  restaurant_id: d.home_restaurant_id,
+                  restaurant_name: d.restaurant_name,
+                  restaurant_cuisine: d.restaurant_cuisine,
+                })}
               />
             ))}
           </div>
@@ -769,6 +783,10 @@ export default function CustomerDashboard() {
         ))}
       </nav>
 
+      <DishDetailSheet
+        dish={selectedDish}
+        onClose={() => { setSelectedDish(null); bumpCart(); }}
+      />
       <CartDrawer />
     </div>
   );
@@ -917,13 +935,14 @@ function RestaurantCard({ r }: { r: Restaurant }) {
 }
 
 function DishCard({
-  d, qty, onAdd, onInc, onDec,
+  d, qty, onAdd, onInc, onDec, onOpenSheet,
 }: {
   d: Dish;
   qty: number;
   onAdd: () => void;
   onInc: () => void;
   onDec: () => void;
+  onOpenSheet: () => void;
 }) {
   return (
     <div
@@ -939,14 +958,14 @@ function DishCard({
           <img
             src={d.image_url}
             alt={d.name}
-            className="w-full h-full object-cover"
-            onClick={() => (window.location.href = `/dashboard/customer/restaurant/${d.home_restaurant_id}`)}
+            className="w-full h-full object-cover cursor-pointer"
+            onClick={onOpenSheet}
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-3xl lg:text-5xl"
+            className="w-full h-full flex items-center justify-center text-3xl lg:text-5xl cursor-pointer"
             style={{ background: "linear-gradient(135deg, #FFF1E3 0%, #FFE4CB 100%)" }}
-            onClick={() => (window.location.href = `/dashboard/customer/restaurant/${d.home_restaurant_id}`)}
+            onClick={onOpenSheet}
           >
             {CUISINE_EMOJI[d.restaurant_cuisine ?? ""] ?? "🍽️"}
           </div>
@@ -1022,7 +1041,7 @@ function DishCard({
       {/* Card body */}
       <div
         className="p-1.5 lg:p-3 cursor-pointer"
-        onClick={() => (window.location.href = `/dashboard/customer/restaurant/${d.home_restaurant_id}`)}
+        onClick={onOpenSheet}
       >
         <p
           className="text-[11px] lg:text-[14px] font-bold leading-tight line-clamp-1"
