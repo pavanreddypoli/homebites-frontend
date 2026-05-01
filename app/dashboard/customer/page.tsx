@@ -15,7 +15,7 @@ import CustomerNav from "@/components/CustomerNav";
 import DishDetailSheet, { type SheetDish } from "@/components/DishDetailSheet";
 import {
   MapPin, Search, Sparkles, Star, Clock, ArrowRight, Plus, Minus, ChefHat,
-  House, Package, User, X,
+  House, Package, User, X, Pencil,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -147,6 +147,15 @@ export default function CustomerDashboard() {
   // Dish detail sheet
   const [selectedDish, setSelectedDish] = useState<SheetDish | null>(null);
 
+  // Location edit dropdown
+  const [locEditing, setLocEditing]         = useState(false);
+  const [locInput, setLocInput]             = useState("");
+  const [locSuggestions, setLocSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [recentLocs, setRecentLocs]         = useState<{ label: string; lat: number; lng: number }[]>([]);
+  const [locToast, setLocToast]             = useState<string | null>(null);
+  const nomTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locDropdownRef = useRef<HTMLDivElement>(null);
+
   // Cart re-render trigger
   const [cartTick, setCartTick] = useState(0);
   const cartCount = useMemo(() => getCartItemCount(), [cartTick]);
@@ -217,6 +226,83 @@ export default function CustomerDashboard() {
       JSON.stringify({ location, city: locationLabel, radiusMi })
     );
   }, [location, locationLabel, radiusMi]);
+
+  /* ── Load recent locations ── */
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("homebites_recent_locations");
+      if (raw) setRecentLocs(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  /* ── Close location dropdown on outside click ── */
+  useEffect(() => {
+    if (!locEditing) return;
+    function onOutside(e: MouseEvent) {
+      if (locDropdownRef.current && !locDropdownRef.current.contains(e.target as Node)) {
+        setLocEditing(false);
+        setLocSuggestions([]);
+      }
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [locEditing]);
+
+  /* ── Location helper functions ── */
+  function saveRecentLoc(label: string, lat: number, lng: number) {
+    const updated = [
+      { label, lat, lng },
+      ...recentLocs.filter((r) => r.label !== label),
+    ].slice(0, 3);
+    setRecentLocs(updated);
+    localStorage.setItem("homebites_recent_locations", JSON.stringify(updated));
+  }
+
+  function applyLocation(label: string, lat: number, lng: number) {
+    setLocationLabel(label);
+    setLocation({ lat, lng });
+    setLocEditing(false);
+    setLocInput("");
+    setLocSuggestions([]);
+    saveRecentLoc(label, lat, lng);
+    setLocToast(`Showing results near ${label}`);
+    setTimeout(() => setLocToast(null), 3500);
+  }
+
+  async function handleUseGPS() {
+    if (!navigator.geolocation) return;
+    setLocEditing(false);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const city = await reverseGeocode(lat, lng);
+        applyLocation(city, lat, lng);
+      },
+      () => {},
+      { timeout: 8000 }
+    );
+  }
+
+  function handleLocInputChange(value: string) {
+    setLocInput(value);
+    if (nomTimerRef.current) clearTimeout(nomTimerRef.current);
+    if (value.length < 3) { setLocSuggestions([]); return; }
+    nomTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=5`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        const data = await res.json();
+        setLocSuggestions(data || []);
+      } catch {}
+    }, 500);
+  }
+
+  function handleSelectSuggestion(s: { display_name: string; lat: string; lon: string }) {
+    const label = s.display_name.split(",").slice(0, 3).join(",").trim();
+    applyLocation(label, parseFloat(s.lat), parseFloat(s.lon));
+  }
 
   /* ── Load data ── */
   useEffect(() => {
@@ -388,6 +474,16 @@ export default function CustomerDashboard() {
     <div className="min-h-screen" style={{ background: "var(--hb-bg)" }}>
       <CustomerNav address={locationLabel} />
 
+      {/* Location change toast */}
+      {locToast && (
+        <div
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[400] px-5 py-3 rounded-full text-[13px] font-semibold text-white shadow-lg pointer-events-none whitespace-nowrap"
+          style={{ background: "#16202B" }}
+        >
+          {locToast}
+        </div>
+      )}
+
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
         className="relative overflow-hidden pt-20 lg:pt-24 pb-10 lg:pb-20 px-4 lg:px-8"
@@ -449,24 +545,121 @@ export default function CustomerDashboard() {
                 boxShadow: "var(--hb-shadow-card)",
               }}
             >
-              {/* Deliver to */}
-              <div
-                className="flex items-center gap-2.5 px-1 pb-3"
-                style={{ borderBottom: "1px solid rgba(11,19,28,.06)" }}
-              >
-                <MapPin size={15} style={{ color: "var(--hb-primary)" }} />
-                <span
-                  className="text-[10.5px] font-bold uppercase tracking-wider"
-                  style={{ color: "var(--hb-fg-muted)" }}
+              {/* Deliver to — click-to-edit */}
+              <div className="relative" ref={locDropdownRef}>
+                <button
+                  onClick={() => { setLocEditing(!locEditing); setLocInput(""); setLocSuggestions([]); }}
+                  className="flex items-center gap-2.5 px-1 pb-3 w-full text-left"
+                  style={{ borderBottom: "1px solid rgba(11,19,28,.06)" }}
                 >
-                  Deliver to
-                </span>
-                <input
-                  value={locationLabel}
-                  onChange={(e) => setLocationLabel(e.target.value)}
-                  className="flex-1 text-[14px] font-semibold bg-transparent outline-none"
-                  style={{ color: "var(--hb-fg)" }}
-                />
+                  <MapPin size={15} style={{ color: "var(--hb-primary)", flexShrink: 0 }} />
+                  <span
+                    className="text-[10.5px] font-bold uppercase tracking-wider"
+                    style={{ color: "var(--hb-fg-muted)" }}
+                  >
+                    Deliver to
+                  </span>
+                  <span className="flex-1 text-[14px] font-semibold truncate text-left" style={{ color: "var(--hb-fg)" }}>
+                    {locationLabel}
+                  </span>
+                  <Pencil size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
+                </button>
+
+                {/* Location dropdown */}
+                {locEditing && (
+                  <div
+                    className="absolute left-0 z-50 bg-white rounded-2xl p-4"
+                    style={{
+                      top: "calc(100% + 6px)",
+                      width: "min(340px, calc(100vw - 32px))",
+                      border: "1px solid var(--hb-border-soft)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    <p className="text-[13px] font-bold mb-3" style={{ color: "var(--hb-fg)" }}>Deliver to</p>
+
+                    {/* GPS button */}
+                    <button
+                      onClick={handleUseGPS}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold mb-3 transition-colors"
+                      style={{ border: "1px solid var(--hb-border-soft)", color: "var(--hb-fg)", background: "#FAFAF9" }}
+                    >
+                      <MapPin size={14} style={{ color: "var(--hb-primary)" }} />
+                      Use my current location
+                    </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex-1 h-px" style={{ background: "var(--hb-border-soft)" }} />
+                      <span className="text-[10.5px]" style={{ color: "var(--hb-fg-muted)" }}>or enter an address</span>
+                      <div className="flex-1 h-px" style={{ background: "var(--hb-border-soft)" }} />
+                    </div>
+
+                    {/* Address input + suggestions */}
+                    <div className="relative">
+                      <input
+                        value={locInput}
+                        onChange={(e) => handleLocInputChange(e.target.value)}
+                        placeholder="Search any address"
+                        autoFocus
+                        className="w-full px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
+                        style={{
+                          background: "#F5F2ED",
+                          border: "1px solid var(--hb-border-soft)",
+                          color: "var(--hb-fg)",
+                        }}
+                      />
+                      {locSuggestions.length > 0 && (
+                        <div
+                          className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl overflow-hidden z-10"
+                          style={{
+                            border: "1px solid var(--hb-border-soft)",
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                            maxHeight: 200,
+                            overflowY: "auto",
+                          }}
+                        >
+                          {locSuggestions.map((s, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSelectSuggestion(s)}
+                              className="w-full text-left px-3.5 py-2.5 text-[12px] transition-colors hover:bg-[#FBF7F1]"
+                              style={{
+                                color: "var(--hb-fg)",
+                                borderBottom: i < locSuggestions.length - 1 ? "1px solid var(--hb-border-soft)" : "none",
+                              }}
+                            >
+                              {s.display_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recent locations */}
+                    {recentLocs.length > 0 && locSuggestions.length === 0 && (
+                      <div className="mt-3">
+                        <p
+                          className="text-[10.5px] font-bold uppercase tracking-wider mb-2"
+                          style={{ color: "var(--hb-fg-muted)" }}
+                        >
+                          Recent
+                        </p>
+                        {recentLocs.map((r, i) => (
+                          <button
+                            key={i}
+                            onClick={() => applyLocation(r.label, r.lat, r.lng)}
+                            className="w-full flex items-center gap-2.5 px-1 py-2 text-[12.5px] rounded-lg transition-colors hover:bg-[#FBF7F1]"
+                            style={{ color: "var(--hb-fg)" }}
+                          >
+                            <Clock size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
+                            <span className="truncate">{r.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Radius slider */}
