@@ -3,26 +3,37 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ChefNav from "@/components/ChefNav";
-import { UtensilsCrossed, Sparkles, ClipboardList } from "lucide-react";
+import { UtensilsCrossed, Sparkles, ClipboardList, AlertCircle } from "lucide-react";
 
 export default function HomeRestaurantDashboard() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]       = useState(true);
+  const [restaurant, setRestaurant] = useState<any>(null);
+  const [dishCount, setDishCount]   = useState(0);
 
   useEffect(() => {
     async function checkProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.href = "/login"; return; }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("home_restaurants")
-        .select("id")
-        .eq("id", user.id)
-        .single();
+        .select("id, name, description, hours")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (!data || error) {
+      if (!data) {
         window.location.href = "/dashboard/home-restaurant/onboarding";
         return;
       }
+
+      setRestaurant(data);
+
+      const { count } = await supabase
+        .from("dishes")
+        .select("id", { count: "exact", head: true })
+        .eq("home_restaurant_id", data.id);
+
+      setDishCount(count ?? 0);
       setLoading(false);
     }
     checkProfile();
@@ -37,6 +48,9 @@ export default function HomeRestaurantDashboard() {
       </div>
     );
   }
+
+  const profileIncomplete =
+    !restaurant?.description || !restaurant?.hours || dishCount === 0;
 
   const cards = [
     {
@@ -70,11 +84,37 @@ export default function HomeRestaurantDashboard() {
       <ChefNav />
 
       <main className="pt-14 max-w-[900px] mx-auto px-4 lg:px-8 py-8">
+
+        {/* Complete profile banner */}
+        {profileIncomplete && (
+          <div
+            className="mb-6 px-4 lg:px-5 py-3.5 rounded-2xl flex items-center gap-3"
+            style={{ background: "#FFF5EB", border: "1.5px solid var(--hb-primary)" }}
+          >
+            <AlertCircle size={18} style={{ color: "var(--hb-primary)", flexShrink: 0 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold" style={{ color: "var(--hb-fg)" }}>
+                Your kitchen is missing some info
+              </p>
+              <p className="text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
+                Complete your profile to attract more customers
+              </p>
+            </div>
+            <button
+              onClick={() => (window.location.href = "/dashboard/home-restaurant/onboarding")}
+              className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-white"
+              style={{ background: "var(--hb-primary)" }}
+            >
+              Complete now →
+            </button>
+          </div>
+        )}
+
         <h1
           className="text-[28px] lg:text-[36px] font-bold tracking-tight mb-1"
           style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
         >
-          Your Home Restaurant
+          {restaurant?.name ?? "Your Kitchen"}
         </h1>
         <p className="text-[14px] mb-8" style={{ color: "var(--hb-fg-muted)" }}>
           Manage your dishes, orders, and settings.
@@ -94,9 +134,7 @@ export default function HomeRestaurantDashboard() {
                 <Icon size={20} style={{ color: "var(--hb-primary)" }} />
               </div>
               <div>
-                <h2 className="text-[16px] font-bold mb-1" style={{ color: "var(--hb-fg)" }}>
-                  {title}
-                </h2>
+                <h2 className="text-[16px] font-bold mb-1" style={{ color: "var(--hb-fg)" }}>{title}</h2>
                 <p className="text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>{desc}</p>
               </div>
               <div className="flex flex-col gap-2 mt-auto">
