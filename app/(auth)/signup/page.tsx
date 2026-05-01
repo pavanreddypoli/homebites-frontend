@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Info } from "lucide-react";
 
 export default function SignupPage() {
   const [name, setName]                   = useState("");
@@ -80,51 +80,97 @@ export default function SignupPage() {
             Join HomeBites as a Home Restaurant
           </p>
 
+          {/* Info card */}
+          <div
+            className="rounded-2xl p-4 mb-6 flex gap-3"
+            style={{ background: "#FFF5EB", border: "1px solid #FFD4A8" }}
+          >
+            <Info size={18} style={{ color: "#FF7A39", flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p className="text-[13px] leading-[1.6]" style={{ color: "#6F6A60" }}>
+                You&apos;re creating a HomeBites account to publish and manage your Home Restaurant.
+                Once your account is set up, you&apos;ll build your brand — add your restaurant name,
+                cuisine, hours, and dishes. Your Home Restaurant page will be visible to customers near you.
+              </p>
+              <div className="mt-3 space-y-1.5">
+                {[
+                  { icon: "🏠", text: "Your own branded Home Restaurant page" },
+                  { icon: "🍽️", text: "Publish dishes with photos and pricing" },
+                  { icon: "📦", text: "Receive and manage orders from customers" },
+                ].map(({ icon, text }) => (
+                  <div key={text} className="flex items-center gap-2 text-[12px] font-semibold" style={{ color: "#16202B" }}>
+                    <span>{icon}</span>
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <form
             onSubmit={(e) => { e.preventDefault(); handleSignup(); }}
             className="space-y-3"
           >
-            <input
-              type="text"
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoComplete="name"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-
-            {/* Password */}
-            <div className="relative">
+            <div>
+              <label className="block text-[12px] font-semibold mb-1" style={{ color: "var(--hb-fg-muted)" }}>
+                Your name
+              </label>
               <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
+                type="text"
+                placeholder="e.g. Priya Sharma"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 required
-                className={`${inputClass} pr-11`}
+                className={inputClass}
                 style={inputStyle}
               />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                style={{ color: "var(--hb-fg-muted)" }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-semibold mb-1" style={{ color: "var(--hb-fg-muted)" }}>
+                Email address
+              </label>
+              <input
+                type="email"
+                placeholder="you@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+                className={inputClass}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-[12px] font-semibold mb-1" style={{ color: "var(--hb-fg-muted)" }}>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                  className={`${inputClass} pr-11`}
+                  style={inputStyle}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--hb-fg-muted)" }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              <p className="text-[11.5px] mt-1.5" style={{ color: "var(--hb-fg-subtle)" }}>
+                🔒 Your information is secure and never shared
+              </p>
             </div>
 
             {/* Confirm password */}
