@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { X, Star, Share2, Check, Plus, Minus } from "lucide-react";
 import {
@@ -58,6 +59,7 @@ function getDietaryTags(description: string, ingredients: string) {
 }
 
 export default function DishDetailSheet({ dish, onClose }: Props) {
+  const router                              = useRouter();
   const [open, setOpen]                     = useState(false);
   const [mounted, setMounted]               = useState(false);
   const [ingredients, setIngredients]       = useState("");
@@ -225,7 +227,7 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
               <button
                 onClick={() => {
                   onClose();
-                  window.location.href = `/dashboard/customer/restaurant/${dish.restaurant_id}`;
+                  router.push(`/dashboard/customer/restaurant/${dish.restaurant_id}`);
                 }}
                 className="text-[14px] font-semibold transition-colors"
                 style={{ color: "var(--hb-primary)" }}
@@ -397,7 +399,7 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
             <button
               onClick={() => {
                 onClose();
-                window.location.href = `/dashboard/customer/restaurant/${dish.restaurant_id}`;
+                router.push(`/dashboard/customer/restaurant/${dish.restaurant_id}`);
               }}
               className="text-[12.5px] font-medium"
               style={{ color: "var(--hb-fg-muted)" }}

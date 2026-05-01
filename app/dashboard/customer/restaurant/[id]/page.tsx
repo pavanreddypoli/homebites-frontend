@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
 import CartDrawer from "@/components/CartDrawer";
@@ -14,7 +14,7 @@ import {
 } from "@/lib/cart";
 import {
   ArrowLeft, MapPin, Star, Clock, ChefHat, Plus, Search,
-  Share2, Check, ArrowRight, House, Package, User, X,
+  Share2, Check, ArrowRight, House, Package, User, X, AlertCircle,
 } from "lucide-react";
 
 type Restaurant = {
@@ -23,6 +23,8 @@ type Restaurant = {
   cuisine: string;
   description: string;
   city: string;
+  is_open?: boolean;
+  closed_message?: string | null;
 };
 
 type Dish = {
@@ -42,6 +44,7 @@ const CUISINE_EMOJI: Record<string, string> = {
 
 export default function RestaurantMenuPage() {
   const params       = useParams();
+  const router       = useRouter();
   const restaurantId = params.id as string;
 
   const [restaurant, setRestaurant]   = useState<Restaurant | null>(null);
@@ -86,7 +89,7 @@ export default function RestaurantMenuPage() {
       const [{ data: restaurantData }, { data: dishData }] = await Promise.all([
         supabase
           .from("home_restaurants")
-          .select("id, name, cuisine, description, city")
+          .select("id, name, cuisine, description, city, is_open, closed_message")
           .eq("id", restaurantId)
           .single(),
         supabase
@@ -100,6 +103,23 @@ export default function RestaurantMenuPage() {
       setLoading(false);
     }
     loadData();
+  }, [restaurantId]);
+
+  // Realtime availability updates
+  useEffect(() => {
+    const channel = supabase
+      .channel(`restaurant-availability-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "home_restaurants", filter: `id=eq.${restaurantId}` },
+        (payload) => {
+          setRestaurant((prev) =>
+            prev ? { ...prev, is_open: payload.new.is_open, closed_message: payload.new.closed_message } : prev
+          );
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [restaurantId]);
 
   function getQty(dishId: string) {
@@ -166,6 +186,11 @@ export default function RestaurantMenuPage() {
     );
   }
 
+  const isOpen = restaurant.is_open !== false;
+
+  // Warn if cart already has items from this restaurant but it's now closed
+  const cartHasItemsHere = mounted && (getCart()?.restaurant_id === restaurantId) && (getCartItemCount() > 0);
+
   const filteredDishes = search.trim()
     ? dishes.filter(
         (d) =>
@@ -187,7 +212,7 @@ export default function RestaurantMenuPage() {
           {/* Back + Share row */}
           <div className="flex items-center justify-between mb-5">
             <button
-              onClick={() => (window.location.href = "/dashboard/customer")}
+              onClick={() => router.push("/dashboard/customer")}
               className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-3 py-1.5 rounded-full bg-white/80 backdrop-blur transition-colors"
               style={{ color: "var(--hb-fg)", border: "1px solid var(--hb-border-soft)" }}
             >
@@ -231,6 +256,24 @@ export default function RestaurantMenuPage() {
               >
                 {restaurant.name}
               </h1>
+
+              {/* Open / Closed status */}
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold"
+                  style={{
+                    background: isOpen ? "#DCFCE7" : "#F3F4F6",
+                    color: isOpen ? "#16A34A" : "#6B7280",
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: isOpen ? "#22C55E" : "#9CA3AF" }}
+                  />
+                  {isOpen ? "Open now" : "Closed"}
+                </span>
+              </div>
+
               <div
                 className="flex flex-wrap items-center gap-1.5 lg:gap-3 text-[12px] lg:text-[14px]"
                 style={{ color: "var(--hb-fg-muted)" }}
@@ -267,6 +310,40 @@ export default function RestaurantMenuPage() {
 
       {/* ── MENU GRID ─────────────────────────────────────────────────────── */}
       <section className="max-w-[1100px] mx-auto px-4 lg:px-8 py-6 lg:py-8 pb-28">
+
+        {/* Closed banner */}
+        {!isOpen && (
+          <div
+            className="mb-5 px-4 py-3.5 rounded-2xl flex items-start gap-3"
+            style={{ background: "#F3F4F6", border: "1px solid #D1D5DB" }}
+          >
+            <AlertCircle size={18} style={{ color: "#6B7280", flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: "#374151" }}>
+                This restaurant is currently closed
+              </p>
+              {restaurant.closed_message && (
+                <p className="text-[12px] mt-0.5" style={{ color: "#6B7280" }}>
+                  {restaurant.closed_message}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Cart warning if items already in cart from this closed restaurant */}
+        {!isOpen && cartHasItemsHere && (
+          <div
+            className="mb-5 px-4 py-3.5 rounded-2xl flex items-start gap-3"
+            style={{ background: "#FFF5EB", border: "1.5px solid var(--hb-primary)" }}
+          >
+            <AlertCircle size={18} style={{ color: "var(--hb-primary)", flexShrink: 0, marginTop: 1 }} />
+            <p className="text-[13px] font-semibold" style={{ color: "var(--hb-fg)" }}>
+              You have items from this restaurant in your cart, but it is now closed. Your order may be affected.
+            </p>
+          </div>
+        )}
+
         {/* Menu header + search */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <h2
@@ -307,9 +384,14 @@ export default function RestaurantMenuPage() {
               return (
                 <div
                   key={dish.id}
-                  className="w-full bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 cursor-pointer"
-                  style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
-                  onClick={() => openDishSheet(dish)}
+                  className="w-full bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
+                  style={{
+                    border: "1px solid var(--hb-border-soft)",
+                    boxShadow: "var(--hb-shadow-soft)",
+                    cursor: isOpen ? "pointer" : "default",
+                    opacity: isOpen ? 1 : 0.65,
+                  }}
+                  onClick={() => { if (isOpen) openDishSheet(dish); }}
                 >
                   {/* Image */}
                   <div className="relative h-[90px] lg:aspect-square lg:h-auto bg-[#F5F2ED] overflow-hidden">
@@ -334,19 +416,21 @@ export default function RestaurantMenuPage() {
                       </div>
                     )}
 
-                    {/* Quick-add "+" */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleQuickAdd(dish); }}
-                      className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-white flex items-center justify-center transition-colors"
-                      style={{
-                        border: "1px solid var(--hb-border-soft)",
-                        boxShadow: "var(--hb-shadow-soft)",
-                        color: "var(--hb-primary)",
-                      }}
-                      aria-label={`Add ${dish.name}`}
-                    >
-                      <Plus size={12} strokeWidth={2.5} />
-                    </button>
+                    {/* Quick-add "+" — hidden when closed */}
+                    {isOpen && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleQuickAdd(dish); }}
+                        className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-white flex items-center justify-center transition-colors"
+                        style={{
+                          border: "1px solid var(--hb-border-soft)",
+                          boxShadow: "var(--hb-shadow-soft)",
+                          color: "var(--hb-primary)",
+                        }}
+                        aria-label={`Add ${dish.name}`}
+                      >
+                        <Plus size={12} strokeWidth={2.5} />
+                      </button>
+                    )}
                   </div>
 
                   {/* Body */}
@@ -420,7 +504,7 @@ export default function RestaurantMenuPage() {
         ].map(({ label, Icon, href }) => (
           <button
             key={label}
-            onClick={() => { if (href !== "#") window.location.href = href; }}
+            onClick={() => { if (href !== "#") router.push(href); }}
             className="flex-1 flex flex-col items-center justify-center gap-0.5"
             style={{ color: "var(--hb-fg-subtle)" }}
           >

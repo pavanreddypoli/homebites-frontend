@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [showPw, setShowPw]       = useState(false);
@@ -19,9 +21,7 @@ export default function LoginPage() {
     if (error) { setMessage(error.message); setLoading(false); return; }
     const { data: { user } } = await supabase.auth.getUser();
     const role = user?.user_metadata?.role;
-    window.location.href = role === "home_restaurant"
-      ? "/dashboard/home-restaurant"
-      : "/dashboard/customer";
+    router.push(role === "home_restaurant" ? "/dashboard/home-restaurant" : "/dashboard/customer");
   }
 
   const inputClass = "w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   getCart,
   updateItemQuantity,
@@ -10,6 +11,7 @@ import {
 import { Plus, Minus, X, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function CartDrawer() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<any>(null);
@@ -227,7 +229,7 @@ export default function CartDrawer() {
               <button
                 onClick={() => {
                   setOpen(false);
-                  window.location.href = "/dashboard/customer/checkout";
+                  router.push("/dashboard/customer/checkout");
                 }}
                 className="w-full py-3.5 rounded-full font-bold text-[15px] text-white transition-colors"
                 style={{

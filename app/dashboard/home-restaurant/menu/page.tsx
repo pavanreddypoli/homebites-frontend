@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import ChefNav from "@/components/ChefNav";
@@ -17,13 +18,14 @@ type Dish = {
 };
 
 export default function MyMenuItems() {
+  const router = useRouter();
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDishes() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.replace("/login"); return; }
 
       const { data: restaurantRow } = await supabase
         .from("home_restaurants")
@@ -80,7 +82,7 @@ export default function MyMenuItems() {
             </p>
           </div>
           <button
-            onClick={() => (window.location.href = "/dashboard/home-restaurant/add-item")}
+            onClick={() => (router.push("/dashboard/home-restaurant/add-item"))}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[13px] font-semibold text-white"
             style={{ background: "var(--hb-primary)" }}
           >
@@ -98,7 +100,7 @@ export default function MyMenuItems() {
               You have no menu items yet.
             </p>
             <button
-              onClick={() => (window.location.href = "/dashboard/home-restaurant/add-item")}
+              onClick={() => (router.push("/dashboard/home-restaurant/add-item"))}
               className="px-5 py-2.5 rounded-full text-[13px] font-semibold text-white"
               style={{ background: "var(--hb-primary)" }}
             >
@@ -147,7 +149,7 @@ export default function MyMenuItems() {
 
                   <div className="flex gap-1.5 mt-2.5">
                     <button
-                      onClick={() => (window.location.href = `/dashboard/home-restaurant/edit-item/${dish.id}`)}
+                      onClick={() => (router.push(`/dashboard/home-restaurant/edit-item/${dish.id}`))}
                       className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
                       style={{ color: "var(--hb-primary)", border: "1px solid var(--hb-primary)", background: "transparent" }}
                     >

@@ -1,32 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ChefNav from "@/components/ChefNav";
 import { UtensilsCrossed, Sparkles, ClipboardList, AlertCircle } from "lucide-react";
 
 export default function HomeRestaurantDashboard() {
+  const router = useRouter();
   const [loading, setLoading]       = useState(true);
   const [restaurant, setRestaurant] = useState<any>(null);
   const [dishCount, setDishCount]   = useState(0);
 
+  // Availability toggle
+  const [isOpen, setIsOpen]             = useState(true);
+  const [closedMessage, setClosedMessage] = useState("");
+  const [savingMsg, setSavingMsg]       = useState(false);
+  const [toast, setToast]               = useState<string | null>(null);
+
   useEffect(() => {
     async function checkProfile() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.replace("/login"); return; }
 
       const { data } = await supabase
         .from("home_restaurants")
-        .select("id, name, description, hours")
+        .select("id, name, description, hours, is_open, closed_message")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (!data) {
-        window.location.href = "/dashboard/home-restaurant/onboarding";
+        router.replace("/dashboard/home-restaurant/onboarding");
         return;
       }
 
       setRestaurant(data);
+      setIsOpen(data.is_open ?? true);
+      setClosedMessage(data.closed_message ?? "");
 
       const { count } = await supabase
         .from("dishes")
@@ -37,7 +47,33 @@ export default function HomeRestaurantDashboard() {
       setLoading(false);
     }
     checkProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  async function handleToggle() {
+    const newVal = !isOpen;
+    setIsOpen(newVal);
+    showToast(newVal ? "You're now Open! 🟢" : "You're now Closed 🔴");
+    await supabase
+      .from("home_restaurants")
+      .update({ is_open: newVal })
+      .eq("id", restaurant.id);
+  }
+
+  async function handleSaveMessage() {
+    setSavingMsg(true);
+    await supabase
+      .from("home_restaurants")
+      .update({ closed_message: closedMessage.trim() || null })
+      .eq("id", restaurant.id);
+    setSavingMsg(false);
+    showToast("Message saved");
+  }
 
   if (loading) {
     return (
@@ -85,6 +121,72 @@ export default function HomeRestaurantDashboard() {
 
       <main className="pt-14 max-w-[900px] mx-auto px-4 lg:px-8 py-8">
 
+        {/* ── Availability toggle card ── */}
+        <div
+          className="bg-white rounded-2xl p-5 mb-6"
+          style={{ border: "1px solid #EDE3D2", boxShadow: "var(--hb-shadow-soft)" }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            {/* Left */}
+            <div className="min-w-0">
+              <p className="text-[16px] font-semibold" style={{ color: "var(--hb-fg)" }}>
+                Your Restaurant
+              </p>
+              <p
+                className="text-[14px] font-medium mt-0.5"
+                style={{ color: isOpen ? "#16A34A" : "#DC2626" }}
+              >
+                {isOpen ? "Open for orders" : "Closed"}
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--hb-fg-muted)" }}>
+                Customers can see your status in real-time
+              </p>
+            </div>
+
+            {/* Toggle switch */}
+            <button
+              onClick={handleToggle}
+              aria-label={isOpen ? "Close your restaurant" : "Open your restaurant"}
+              className="relative flex-shrink-0 transition-colors duration-200 rounded-full"
+              style={{
+                width: 52,
+                height: 28,
+                background: isOpen ? "#22C55E" : "#D1D5DB",
+              }}
+            >
+              <span
+                className="absolute top-[3px] w-[22px] h-[22px] bg-white rounded-full shadow transition-transform duration-200"
+                style={{ transform: isOpen ? "translateX(27px)" : "translateX(3px)" }}
+              />
+            </button>
+          </div>
+
+          {/* Closed message input — only when closed */}
+          {!isOpen && (
+            <div className="mt-4 flex gap-2">
+              <input
+                value={closedMessage}
+                onChange={(e) => setClosedMessage(e.target.value)}
+                placeholder="e.g. Back tomorrow at 6pm!"
+                className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                style={{
+                  background: "#F5F2ED",
+                  border: "1px solid var(--hb-border-soft)",
+                  color: "var(--hb-fg)",
+                }}
+              />
+              <button
+                onClick={handleSaveMessage}
+                disabled={savingMsg}
+                className="px-3.5 py-2 rounded-xl text-[12px] font-semibold text-white flex-shrink-0"
+                style={{ background: savingMsg ? "var(--hb-fg-subtle)" : "var(--hb-primary)" }}
+              >
+                {savingMsg ? "Saving…" : "Save"}
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Complete profile banner */}
         {profileIncomplete && (
           <div
@@ -101,7 +203,7 @@ export default function HomeRestaurantDashboard() {
               </p>
             </div>
             <button
-              onClick={() => (window.location.href = "/dashboard/home-restaurant/onboarding")}
+              onClick={() => router.push("/dashboard/home-restaurant/onboarding")}
               className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-white"
               style={{ background: "var(--hb-primary)" }}
             >
@@ -139,7 +241,7 @@ export default function HomeRestaurantDashboard() {
               </div>
               <div className="flex flex-col gap-2 mt-auto">
                 <button
-                  onClick={() => { if (!disabled && href !== "#") window.location.href = href; }}
+                  onClick={() => { if (!disabled && href !== "#") router.push(href); }}
                   disabled={disabled}
                   className="w-full py-2.5 rounded-full text-[13px] font-semibold text-white transition-colors"
                   style={{ background: disabled ? "var(--hb-fg-subtle)" : "var(--hb-primary)" }}
@@ -148,7 +250,7 @@ export default function HomeRestaurantDashboard() {
                 </button>
                 {secondary && secondaryHref && (
                   <button
-                    onClick={() => (window.location.href = secondaryHref)}
+                    onClick={() => router.push(secondaryHref)}
                     className="w-full py-2.5 rounded-full text-[13px] font-semibold transition-colors"
                     style={{
                       color: "var(--hb-primary)",
@@ -164,6 +266,16 @@ export default function HomeRestaurantDashboard() {
           ))}
         </div>
       </main>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] px-5 py-3 rounded-full text-[13px] font-semibold text-white shadow-lg whitespace-nowrap"
+          style={{ background: "#16202B" }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

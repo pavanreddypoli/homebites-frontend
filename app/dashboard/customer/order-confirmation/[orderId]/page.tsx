@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
 import { CheckCircle2, Store, Clock, Receipt, Copy, Check } from "lucide-react";
@@ -26,6 +26,7 @@ type OrderItem = {
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
+  const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,7 +215,7 @@ export default function OrderConfirmationPage() {
             background: "var(--hb-primary)",
             boxShadow: "0 4px 14px -2px rgba(255,122,57,.45)",
           }}
-          onClick={() => (window.location.href = "/dashboard/customer")}
+          onClick={() => router.push("/dashboard/customer")}
         >
           Order something else
         </button>

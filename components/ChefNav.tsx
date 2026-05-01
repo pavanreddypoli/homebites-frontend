@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Menu, X, LogOut, ChefHat } from "lucide-react";
 
@@ -16,11 +16,12 @@ const NAV_LINKS = [
 
 export default function ChefNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   async function logout() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    router.push("/login");
   }
 
   function isActive(href: string) {

@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { useParams } from "next/navigation";
 import ChefNav from "@/components/ChefNav";
 
 export default function EditMenuItem() {
+  const router = useRouter();
   const { id } = useParams<{ id: string }>();
 
   const [name, setName] = useState("");
@@ -50,7 +51,7 @@ export default function EditMenuItem() {
     }).eq("id", id);
 
     if (error) { setMessage(error.message); setUploading(false); return; }
-    window.location.href = "/dashboard/home-restaurant/menu";
+    router.push("/dashboard/home-restaurant/menu");
   }
 
   const fieldClass = "w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors";

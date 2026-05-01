@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { ShoppingBag, MapPin, ChevronDown } from "lucide-react";
 import { getCartItemCount } from "@/lib/cart";
@@ -12,6 +13,7 @@ export default function CustomerNav({
   address?: string;
   onAddressClick?: () => void;
 }) {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const [cartCount, setCartCount] = useState(0);
@@ -33,7 +35,7 @@ export default function CustomerNav({
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    window.location.href = "/dashboard/customer";
+    router.push("/dashboard/customer");
   }
 
   return (
@@ -47,7 +49,7 @@ export default function CustomerNav({
       <div className="h-14 lg:h-16 px-4 lg:px-8 flex items-center gap-2 lg:gap-4 max-w-[1400px] mx-auto">
         {/* Logo + wordmark */}
         <button
-          onClick={() => (window.location.href = "/dashboard/customer")}
+          onClick={() => router.push("/dashboard/customer")}
           className="flex items-center gap-2 flex-shrink-0"
         >
           <span
@@ -101,7 +103,7 @@ export default function CustomerNav({
           isChef ? (
             <>
               <button
-                onClick={() => (window.location.href = "/dashboard/home-restaurant")}
+                onClick={() => router.push("/dashboard/home-restaurant")}
                 className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
@@ -118,14 +120,14 @@ export default function CustomerNav({
           ) : (
             <>
               <button
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => router.push("/login")}
                 className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
                 Home Restaurant Login
               </button>
               <button
-                onClick={() => (window.location.href = "/signup")}
+                onClick={() => router.push("/signup")}
                 className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
                 style={{ background: "#FF7A39" }}
               >
@@ -140,7 +142,7 @@ export default function CustomerNav({
           isChef ? (
             <>
               <button
-                onClick={() => (window.location.href = "/dashboard/home-restaurant")}
+                onClick={() => router.push("/dashboard/home-restaurant")}
                 className="lg:hidden px-3 py-1 rounded-full text-[11px] font-medium transition-colors"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
@@ -157,14 +159,14 @@ export default function CustomerNav({
           ) : (
             <>
               <button
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => router.push("/login")}
                 className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
                 Home Restaurant Login
               </button>
               <button
-                onClick={() => (window.location.href = "/signup")}
+                onClick={() => router.push("/signup")}
                 className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
                 style={{ background: "#FF7A39" }}
               >

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ChefNav from "@/components/ChefNav";
 
 export default function AddMenuItem() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [description, setDescription] = useState("");
@@ -64,7 +66,7 @@ export default function AddMenuItem() {
     });
 
     if (error) { setMessage(error.message); setUploading(false); return; }
-    window.location.href = "/dashboard/home-restaurant/menu";
+    router.push("/dashboard/home-restaurant/menu");
   }
 
   const fieldClass = "w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors";

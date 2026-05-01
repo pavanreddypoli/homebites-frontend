@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -30,6 +31,7 @@ interface CheckoutFormProps {
 function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -111,7 +113,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
         body: JSON.stringify({ orderId, email }),
       }).catch((err) => console.error("notify-order failed:", err));
 
-      window.location.href = `/dashboard/customer/order-confirmation/${orderId}`;
+      router.push(`/dashboard/customer/order-confirmation/${orderId}`);
     }
   }
 
@@ -261,6 +263,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
 /* ─── Outer page shell ────────────────────────────────────────────────────── */
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [user, setUser] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState("");
@@ -398,6 +401,7 @@ function Centered({ text, tone }: { text: string; tone?: "error" }) {
 }
 
 function EmptyCart() {
+  const router = useRouter();
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
       <div
@@ -416,7 +420,7 @@ function EmptyCart() {
         Add a few dishes to start an order.
       </p>
       <button
-        onClick={() => (window.location.href = "/dashboard/customer")}
+        onClick={() => router.push("/dashboard/customer")}
         className="px-5 py-3 rounded-full font-bold text-[14px] text-white"
         style={{ background: "var(--hb-primary)" }}
       >

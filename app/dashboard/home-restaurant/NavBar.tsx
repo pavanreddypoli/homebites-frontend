@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export default function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   async function logout() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    router.push("/login");
   }
 
   const linkBase =

@@ -9,6 +9,7 @@ import {
   getCartItemCount,
   updateItemQuantity,
 } from "@/lib/cart";
+import { useRouter } from "next/navigation";
 import CartDrawer from "@/components/CartDrawer";
 import CustomerNav from "@/components/CustomerNav";
 import DishDetailSheet, { type SheetDish } from "@/components/DishDetailSheet";
@@ -29,6 +30,8 @@ type Restaurant = {
   lng?: number;
   delivery_radius_km?: number;
   distance_km?: number;
+  is_open?: boolean;
+  closed_message?: string | null;
 };
 
 type Dish = {
@@ -119,6 +122,8 @@ function CuisineEmojiBg({ cuisine, className = "" }: { cuisine: string; classNam
 /* ─── Main page ──────────────────────────────────────────────────────────── */
 
 export default function CustomerDashboard() {
+  const router = useRouter();
+
   // Auth
   const [user, setUser]       = useState<any>(null);
   const [mounted, setMounted] = useState(false);
@@ -219,7 +224,7 @@ export default function CustomerDashboard() {
       const [{ data: restaurantData }, { data: dishData }] = await Promise.all([
         supabase
           .from("home_restaurants")
-          .select("id, name, cuisine, description, city, lat, lng, delivery_radius_km")
+          .select("id, name, cuisine, description, city, lat, lng, delivery_radius_km, is_open, closed_message")
           .eq("is_active", true),
         supabase
           .from("dishes")
@@ -258,6 +263,27 @@ export default function CustomerDashboard() {
 
     loadData();
   }, [location]);
+
+  /* ── Realtime: update is_open/closed_message instantly ── */
+  useEffect(() => {
+    const channel = supabase
+      .channel("restaurant-availability")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "home_restaurants" },
+        (payload) => {
+          setRestaurants((prev) =>
+            prev.map((r) =>
+              r.id === payload.new.id
+                ? { ...r, is_open: payload.new.is_open, closed_message: payload.new.closed_message }
+                : r
+            )
+          );
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   /* ── Cart helpers ── */
   function getQty(dishId: string) {
@@ -773,7 +799,7 @@ export default function CustomerDashboard() {
         ].map(({ label, Icon, href, active }) => (
           <button
             key={label}
-            onClick={() => { if (href !== "#") window.location.href = href; }}
+            onClick={() => { if (href !== "#") router.push(href); }}
             className="flex-1 flex flex-col items-center justify-center gap-0.5"
             style={{ color: active ? "var(--hb-primary)" : "var(--hb-fg-subtle)" }}
           >
@@ -857,24 +883,28 @@ function SectionHeader({
 }
 
 function RestaurantCard({ r }: { r: Restaurant }) {
+  const router = useRouter();
+  const open = r.is_open !== false;
+
   return (
     <button
-      onClick={() => (window.location.href = `/dashboard/customer/restaurant/${r.id}`)}
+      onClick={() => { if (open) router.push(`/dashboard/customer/restaurant/${r.id}`); }}
       className="w-full lg:flex-shrink-0 lg:w-[280px] bg-white rounded-2xl text-left transition-all overflow-hidden hover:-translate-y-0.5"
       style={{
         border: "1px solid var(--hb-border-soft)",
         boxShadow: "var(--hb-shadow-soft)",
+        opacity: open ? 1 : 0.6,
+        cursor: open ? "pointer" : "default",
       }}
     >
-      {/* Image + deal badge */}
+      {/* Image + status badge */}
       <div className="relative">
         <CuisineEmojiBg cuisine={r.cuisine} className="h-[80px] lg:h-[150px]" />
-        {/* Deal badge — mobile only */}
         <span
-          className="lg:hidden absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white leading-none"
-          style={{ background: "var(--hb-primary)" }}
+          className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white leading-none"
+          style={{ background: open ? "#16A34A" : "#6B7280" }}
         >
-          Free delivery
+          {open ? "Open" : "Closed"}
         </span>
       </div>
 

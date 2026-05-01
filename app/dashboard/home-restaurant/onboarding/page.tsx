@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   ChefHat, Clock, Utensils, MapPin, Plus, Trash2, Sparkles,
@@ -47,6 +48,7 @@ function parse12to24(t: string): string {
 /* ─── Component ──────────────────────────────────────────────────────────────── */
 
 export default function HomeRestaurantOnboarding() {
+  const router = useRouter();
   const [step, setStep]             = useState(1);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -88,7 +90,7 @@ export default function HomeRestaurantOnboarding() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.replace("/login"); return; }
       setNotifEmail(user.email ?? "");
 
       const { data } = await supabase
@@ -171,7 +173,7 @@ export default function HomeRestaurantOnboarding() {
     if (!kitchenName.trim()) { setMessage("Please enter your restaurant name."); return; }
     setSaving(true); setMessage("");
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = "/login"; return; }
+    if (!user) { router.replace("/login"); return; }
 
     const payload = {
       name: kitchenName,
@@ -314,7 +316,7 @@ export default function HomeRestaurantOnboarding() {
         style={{ background: "rgba(255,251,245,0.9)", borderBottom: "1px solid var(--hb-border-soft)" }}
       >
         <button
-          onClick={() => (window.location.href = "/dashboard/customer")}
+          onClick={() => (router.push("/dashboard/customer"))}
           className="flex items-center gap-2"
         >
           <span
@@ -856,7 +858,7 @@ export default function HomeRestaurantOnboarding() {
                 </div>
 
                 <button
-                  onClick={() => (window.location.href = "/dashboard/home-restaurant")}
+                  onClick={() => (router.push("/dashboard/home-restaurant"))}
                   className="w-full py-3.5 rounded-full text-[15px] font-bold text-white"
                   style={{
                     background: "var(--hb-primary)",

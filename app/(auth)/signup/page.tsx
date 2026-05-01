@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, Info } from "lucide-react";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [name, setName]                   = useState("");
   const [email, setEmail]                 = useState("");
   const [password, setPassword]           = useState("");
@@ -30,7 +32,7 @@ export default function SignupPage() {
     if (error) { setMessage(error.message); setLoading(false); return; }
 
     if (data.session) {
-      window.location.href = "/dashboard/home-restaurant/onboarding";
+      router.push("/dashboard/home-restaurant/onboarding");
     } else {
       setMessage("Account created! Check your inbox to confirm your email, then sign in.");
       setLoading(false);
