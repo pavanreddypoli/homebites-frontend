@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   addToCart as addToCartLib,
@@ -13,7 +13,7 @@ import CartDrawer from "@/components/CartDrawer";
 import CustomerNav from "@/components/CustomerNav";
 import {
   MapPin, Search, Sparkles, Star, Clock, ArrowRight, Plus, Minus, ChefHat,
-  House, Package, User,
+  House, Package, User, X,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -141,6 +141,18 @@ export default function CustomerDashboard() {
   const cartCount = useMemo(() => getCartItemCount(), [cartTick]);
   const cartTotal = useMemo(() => getCartSubtotal(),  [cartTick]);
   function bumpCart() { setCartTick((v) => v + 1); }
+
+  // Dismissible cart bar
+  const [cartBarDismissed, setCartBarDismissed] = useState(false);
+  const prevCartCountRef = useRef(0);
+  const touchStartYRef = useRef(0);
+
+  useEffect(() => {
+    if (cartCount > prevCartCountRef.current) {
+      setCartBarDismissed(false);
+    }
+    prevCartCountRef.current = cartCount;
+  }, [cartCount]);
 
   /* ── Cart listener ── */
   useEffect(() => {
@@ -622,7 +634,7 @@ export default function CustomerDashboard() {
               }
             />
           ) : (
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+            <div className="grid grid-cols-4 gap-2 lg:flex lg:gap-4 lg:overflow-x-auto lg:scrollbar-hide lg:pb-2">
               {restaurantsNear.map((r) => (
                 <RestaurantCard key={r.id} r={r} />
               ))}
@@ -682,7 +694,7 @@ export default function CustomerDashboard() {
             }
           />
         ) : (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4">
+          <div className="grid grid-cols-4 gap-2 lg:gap-4">
             {dishesNear.map((d) => (
               <DishCard
                 key={d.id}
@@ -698,26 +710,39 @@ export default function CustomerDashboard() {
       </main>
 
       {/* ── Floating cart bar — mobile only, shows when cart has items ─── */}
-      {mounted && cartCount > 0 && (
-        <div className="lg:hidden fixed bottom-[68px] left-4 right-4 z-40">
-          <button
-            onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
-            className="w-full rounded-full py-4 px-5 flex items-center gap-3 shadow-lg"
+      {mounted && cartCount > 0 && !cartBarDismissed && (
+        <div
+          className="lg:hidden fixed bottom-16 left-4 right-4 z-40"
+          onTouchStart={(e) => { touchStartYRef.current = e.touches[0].clientY; }}
+          onTouchEnd={(e) => {
+            const dy = e.changedTouches[0].clientY - touchStartYRef.current;
+            if (dy > 30) setCartBarDismissed(true);
+          }}
+        >
+          <div
+            className="w-full rounded-full py-3.5 px-4 flex items-center gap-3 shadow-lg"
             style={{ background: "var(--hb-primary)" }}
           >
-            <span
-              className="text-sm font-bold text-white bg-white/20 rounded-full min-w-[26px] h-[26px] flex items-center justify-center px-1.5"
+            <button
+              onClick={() => window.dispatchEvent(new Event("homebites:open-cart"))}
+              className="flex items-center gap-3 flex-1 min-w-0"
             >
-              {cartCount}
-            </span>
-            <span className="flex-1 text-[14px] font-bold text-white text-center">
-              View cart
-            </span>
-            <span className="text-[14px] font-bold text-white">
-              ${cartTotal.toFixed(2)}
-            </span>
-            <ArrowRight size={16} color="white" />
-          </button>
+              <span className="text-sm font-bold text-white bg-white/20 rounded-full min-w-[26px] h-[26px] flex items-center justify-center px-1.5">
+                {cartCount}
+              </span>
+              <span className="flex-1 text-[14px] font-bold text-white text-center">View cart</span>
+              <span className="text-[14px] font-bold text-white">${cartTotal.toFixed(2)}</span>
+              <ArrowRight size={16} color="white" />
+            </button>
+            <button
+              onClick={() => setCartBarDismissed(true)}
+              className="ml-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.2)" }}
+              aria-label="Dismiss cart bar"
+            >
+              <X size={13} color="white" strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -817,7 +842,7 @@ function RestaurantCard({ r }: { r: Restaurant }) {
   return (
     <button
       onClick={() => (window.location.href = `/dashboard/customer/restaurant/${r.id}`)}
-      className="flex-shrink-0 w-[110px] lg:w-[280px] bg-white rounded-2xl text-left transition-all overflow-hidden hover:-translate-y-0.5"
+      className="w-full lg:flex-shrink-0 lg:w-[280px] bg-white rounded-2xl text-left transition-all overflow-hidden hover:-translate-y-0.5"
       style={{
         border: "1px solid var(--hb-border-soft)",
         boxShadow: "var(--hb-shadow-soft)",
@@ -902,7 +927,7 @@ function DishCard({
 }) {
   return (
     <div
-      className="flex-shrink-0 w-[100px] lg:w-auto bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
+      className="w-full lg:w-auto bg-white rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5"
       style={{
         border: "1px solid var(--hb-border-soft)",
         boxShadow: "var(--hb-shadow-soft)",
@@ -1047,11 +1072,11 @@ function DishCard({
 function CardRowSkeleton({ kind }: { kind: "restaurant" | "dish" }) {
   if (kind === "restaurant") {
     return (
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+      <div className="grid grid-cols-4 gap-2 lg:flex lg:gap-3 lg:overflow-x-auto lg:scrollbar-hide lg:pb-2">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-[110px] lg:w-[280px] bg-white rounded-2xl overflow-hidden animate-pulse"
+            className="w-full lg:flex-shrink-0 lg:w-[280px] bg-white rounded-2xl overflow-hidden animate-pulse"
             style={{ border: "1px solid var(--hb-border-soft)" }}
           >
             <div className="h-[80px] lg:h-[150px] bg-[#F0EBE3]" />
@@ -1065,11 +1090,11 @@ function CardRowSkeleton({ kind }: { kind: "restaurant" | "dish" }) {
     );
   }
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-4 gap-2 lg:gap-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="flex-shrink-0 w-[100px] lg:w-auto bg-white rounded-2xl overflow-hidden animate-pulse"
+          className="w-full lg:w-auto bg-white rounded-2xl overflow-hidden animate-pulse"
           style={{ border: "1px solid var(--hb-border-soft)" }}
         >
           <div className="h-[90px] lg:h-auto lg:aspect-square bg-[#F0EBE3]" />
