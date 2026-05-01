@@ -6,9 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, ShoppingBag, ChefHat } from "lucide-react";
 
 export default function SignupPage() {
-  const [email, setEmail] = useState("");
+  const [name, setName]       = useState("");
+  const [email, setEmail]     = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"customer" | "home_restaurant">("customer");
+  const [role, setRole]       = useState<"customer" | "home_restaurant">("customer");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -20,7 +21,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role } },
+      options: { data: { role, full_name: name } },
     });
 
     if (error) {
@@ -31,7 +32,7 @@ export default function SignupPage() {
 
     setSuccess(true);
     setLoading(false);
-    setTimeout(() => { window.location.href = "/login"; }, 1500);
+    setTimeout(() => { window.location.href = "/login"; }, 2000);
   }
 
   return (
@@ -41,7 +42,7 @@ export default function SignupPage() {
         background: "linear-gradient(180deg, var(--hb-bg) 0%, var(--hb-bg-warm) 100%)",
       }}
     >
-      <div className="w-full max-w-[440px]">
+      <div className="w-full max-w-[460px]">
         <Link
           href="/dashboard/customer"
           className="inline-flex items-center gap-1.5 text-[13px] font-semibold mb-5"
@@ -57,6 +58,7 @@ export default function SignupPage() {
             boxShadow: "var(--hb-shadow-card)",
           }}
         >
+          {/* Logo mark */}
           <div className="flex items-center gap-2.5 mb-6">
             <span
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[17px]"
@@ -82,21 +84,21 @@ export default function SignupPage() {
             Eat home-cooked food, or share your kitchen with the neighborhood.
           </p>
 
-          {/* Role picker */}
-          <div className="grid grid-cols-2 gap-2.5 mb-4">
-            <RolePill
+          {/* Role picker — large visual cards */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <RoleCard
               active={role === "customer"}
               onClick={() => setRole("customer")}
-              icon={<ShoppingBag size={15} />}
-              title="Order food"
-              subtitle="Browse home cooks"
+              icon={<ShoppingBag size={22} />}
+              title="I want to order food"
+              subtitle="Browse & order from home cooks near you"
             />
-            <RolePill
+            <RoleCard
               active={role === "home_restaurant"}
               onClick={() => setRole("home_restaurant")}
-              icon={<ChefHat size={15} />}
-              title="Become a chef"
-              subtitle="Sell home-cooked meals"
+              icon={<ChefHat size={22} />}
+              title="I want to cook and sell"
+              subtitle="Set up your kitchen and start earning"
             />
           </div>
 
@@ -107,6 +109,13 @@ export default function SignupPage() {
             }}
             className="space-y-3"
           >
+            <Field
+              type="text"
+              placeholder="Full name"
+              value={name}
+              onChange={setName}
+              autoComplete="name"
+            />
             <Field
               type="email"
               placeholder="Email"
@@ -132,7 +141,7 @@ export default function SignupPage() {
               }}
             >
               {success
-                ? "Check your inbox →"
+                ? "Account created — check your inbox →"
                 : loading
                 ? "Creating account…"
                 : "Create account"}
@@ -175,7 +184,7 @@ export default function SignupPage() {
   );
 }
 
-function RolePill({
+function RoleCard({
   active,
   onClick,
   icon,
@@ -192,21 +201,30 @@ function RolePill({
     <button
       type="button"
       onClick={onClick}
-      className="text-left p-3.5 rounded-xl transition-all"
+      className="text-left p-4 rounded-2xl transition-all"
       style={{
         background: active ? "var(--hb-primary-soft)" : "#FBF7F1",
-        border: active ? "1.5px solid var(--hb-primary)" : "1.5px solid transparent",
+        border: active ? "2px solid var(--hb-primary)" : "2px solid transparent",
+        outline: "none",
       }}
     >
       <span
-        className="flex items-center gap-1.5 mb-1"
-        style={{ color: active ? "var(--hb-primary)" : "var(--hb-fg-muted)" }}
+        className="flex items-center justify-center w-10 h-10 rounded-xl mb-3"
+        style={{
+          background: active ? "var(--hb-primary)" : "#F0EBE3",
+          color: active ? "#fff" : "var(--hb-fg-muted)",
+        }}
       >
         {icon}
-        <span className="text-[13.5px] font-bold">{title}</span>
       </span>
       <span
-        className="block text-[11.5px]"
+        className="block text-[13.5px] font-bold leading-snug mb-1"
+        style={{ color: active ? "var(--hb-fg)" : "var(--hb-fg)" }}
+      >
+        {title}
+      </span>
+      <span
+        className="block text-[11.5px] leading-snug"
         style={{ color: active ? "#C24B12" : "var(--hb-fg-subtle)" }}
       >
         {subtitle}
@@ -236,7 +254,7 @@ function Field({
       onChange={(e) => onChange(e.target.value)}
       autoComplete={autoComplete}
       required
-      className="w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors focus:border-[var(--hb-primary)]"
+      className="w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-colors"
       style={{
         background: "#FBF7F1",
         border: "1px solid var(--hb-border-soft)",

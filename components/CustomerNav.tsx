@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
-import { ShoppingBag, MapPin, Search, ChevronDown } from "lucide-react";
+import { ShoppingBag, MapPin, ChevronDown } from "lucide-react";
 import { getCartItemCount } from "@/lib/cart";
 
-/**
- * Responsive top header used across customer-flow pages.
- * Matches the design system: brand orange, Fraunces wordmark, soft warm border,
- * compact on mobile, expanded on desktop with address + nav links.
- */
 export default function CustomerNav({
   address,
   onAddressClick,
@@ -35,6 +29,13 @@ export default function CustomerNav({
     return () => window.removeEventListener("homebites:cart-updated", onCartUpdated);
   }, [mounted]);
 
+  const isChef = mounted && !!user && user?.user_metadata?.role === "home_restaurant";
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = "/dashboard/customer";
+  }
+
   return (
     <header
       className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-md"
@@ -43,7 +44,7 @@ export default function CustomerNav({
         borderBottom: "1px solid var(--hb-border-soft)",
       }}
     >
-      <div className="h-14 lg:h-16 px-4 lg:px-8 flex items-center gap-3 lg:gap-5 max-w-[1400px] mx-auto">
+      <div className="h-14 lg:h-16 px-4 lg:px-8 flex items-center gap-2 lg:gap-4 max-w-[1400px] mx-auto">
         {/* Logo + wordmark */}
         <button
           onClick={() => (window.location.href = "/dashboard/customer")}
@@ -63,7 +64,7 @@ export default function CustomerNav({
           </span>
         </button>
 
-        {/* Desktop nav */}
+        {/* Desktop nav links */}
         <nav className="hidden lg:flex items-center gap-1 ml-2">
           {["Browse", "How it works"].map((label) => (
             <button
@@ -95,37 +96,83 @@ export default function CustomerNav({
           </button>
         )}
 
-        {/* Restaurant login — desktop only */}
-        <button
-          onClick={() => (window.location.href = "/login")}
-          className="hidden lg:block px-3 py-1.5 text-[13.5px] font-semibold rounded-md transition-colors"
-          style={{ color: "var(--hb-fg-muted)" }}
-        >
-          {mounted && user ? "Account" : "Restaurant login"}
-        </button>
+        {/* ── Chef action buttons — desktop ── */}
+        {mounted && (
+          isChef ? (
+            <>
+              <button
+                onClick={() => (window.location.href = "/dashboard/home-restaurant")}
+                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
+              >
+                My Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
+                style={{ background: "var(--hb-fg)" }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => (window.location.href = "/login")}
+                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
+              >
+                Restaurant Login
+              </button>
+              <button
+                onClick={() => (window.location.href = "/signup")}
+                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
+                style={{ background: "#FF7A39" }}
+              >
+                Become a Home Restaurant
+              </button>
+            </>
+          )
+        )}
 
-        {/* Become a Home restaurant — desktop only */}
-        <button
-          onClick={() => (window.location.href = "/signup")}
-          className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-colors text-white"
-          style={{
-            background: "var(--hb-fg)",
-          }}
-        >
-          Become a Home restaurant
-        </button>
-
-        {/* Sign In / Account — mobile only */}
-        <button
-          onClick={() => (window.location.href = mounted && user ? "/dashboard" : "/login")}
-          className="lg:hidden px-3 py-1.5 text-[12px] font-semibold rounded-full"
-          style={{
-            color: "var(--hb-primary)",
-            border: "1px solid var(--hb-primary)",
-          }}
-        >
-          {mounted && user ? "Account" : "Sign in"}
-        </button>
+        {/* ── Chef action buttons — mobile ── */}
+        {mounted && (
+          isChef ? (
+            <>
+              <button
+                onClick={() => (window.location.href = "/dashboard/home-restaurant")}
+                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-medium transition-colors"
+                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-semibold text-white transition-colors"
+                style={{ background: "var(--hb-fg)" }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => (window.location.href = "/login")}
+                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-medium transition-colors"
+                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => (window.location.href = "/signup")}
+                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-semibold text-white transition-colors"
+                style={{ background: "#FF7A39" }}
+              >
+                Become a Chef
+              </button>
+            </>
+          )
+        )}
 
         {/* Cart */}
         <button

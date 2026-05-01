@@ -18,9 +18,13 @@ export default function LoginPage() {
     if (error) {
       setMessage(error.message);
       setLoading(false);
-    } else {
-      window.location.href = "/dashboard";
+      return;
     }
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.user_metadata?.role;
+    window.location.href = role === "home_restaurant"
+      ? "/dashboard/home-restaurant"
+      : "/dashboard/customer";
   }
 
   return (
