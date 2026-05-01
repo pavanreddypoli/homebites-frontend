@@ -15,8 +15,9 @@ import CustomerNav from "@/components/CustomerNav";
 import DishDetailSheet, { type SheetDish } from "@/components/DishDetailSheet";
 import {
   MapPin, Search, Sparkles, Star, Clock, ArrowRight, Plus, Minus, ChefHat,
-  House, Package, User, X, Pencil,
+  House, Package, User, X, Pencil, Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -154,8 +155,9 @@ export default function CustomerDashboard() {
   const [locSuggestions, setLocSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [recentLocs, setRecentLocs]         = useState<{ label: string; lat: number; lng: number }[]>([]);
   const [locToast, setLocToast]             = useState<string | null>(null);
+  const [locGPSLoading, setLocGPSLoading]   = useState(false);
+  const [locGPSError, setLocGPSError]       = useState<string | null>(null);
   const nomTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const locDropdownRef = useRef<HTMLDivElement>(null);
 
   // Cart re-render trigger
   const [cartTick, setCartTick] = useState(0);
@@ -244,18 +246,6 @@ export default function CustomerDashboard() {
     } catch {}
   }, []);
 
-  /* ── Close location dropdown on outside click ── */
-  useEffect(() => {
-    if (!locEditing) return;
-    function onOutside(e: MouseEvent) {
-      if (locDropdownRef.current && !locDropdownRef.current.contains(e.target as Node)) {
-        setLocEditing(false);
-        setLocSuggestions([]);
-      }
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [locEditing]);
 
   /* ── Location helper functions ── */
   function saveRecentLoc(label: string, lat: number, lng: number) {
@@ -279,15 +269,30 @@ export default function CustomerDashboard() {
   }
 
   async function handleUseGPS() {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocGPSError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocGPSLoading(true);
+    setLocGPSError(null);
     setLocEditing(false);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         const city = await reverseGeocode(lat, lng);
         applyLocation(city, lat, lng);
+        setLocGPSLoading(false);
       },
-      () => {},
+      (err) => {
+        setLocGPSLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocGPSError("Location permission denied — please enter an address below.");
+        } else if (err.code === err.TIMEOUT) {
+          setLocGPSError("Location timed out. Try entering an address below.");
+        } else {
+          setLocGPSError("Location unavailable. Try entering an address below.");
+        }
+      },
       { timeout: 8000 }
     );
   }
@@ -554,127 +559,138 @@ export default function CustomerDashboard() {
                 boxShadow: "var(--hb-shadow-card)",
               }}
             >
-              {/* Deliver to — click-to-edit */}
-              <div className="relative" ref={locDropdownRef}>
-                <button
-                  onClick={() => { setLocEditing(!locEditing); setLocInput(""); setLocSuggestions([]); }}
-                  className="flex items-center gap-2.5 px-1 pb-3 w-full text-left"
-                  style={{ borderBottom: "1px solid rgba(11,19,28,.06)" }}
+              {/* Deliver to — click toggles address input */}
+              <button
+                onClick={() => { setLocEditing(!locEditing); setLocInput(""); setLocSuggestions([]); setLocGPSError(null); }}
+                className="flex items-center gap-2.5 px-1 pb-3 w-full text-left"
+                style={{ borderBottom: "1px solid rgba(11,19,28,.06)" }}
+              >
+                <MapPin size={15} style={{ color: "var(--hb-primary)", flexShrink: 0 }} />
+                <span
+                  className="text-[10.5px] font-bold uppercase tracking-wider"
+                  style={{ color: "var(--hb-fg-muted)" }}
                 >
-                  <MapPin size={15} style={{ color: "var(--hb-primary)", flexShrink: 0 }} />
-                  <span
-                    className="text-[10.5px] font-bold uppercase tracking-wider"
-                    style={{ color: "var(--hb-fg-muted)" }}
-                  >
-                    Deliver to
-                  </span>
-                  <span className="flex-1 text-[14px] font-semibold truncate text-left" style={{ color: "var(--hb-fg)" }}>
-                    {locationLabel}
-                  </span>
-                  <Pencil size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
-                </button>
+                  Deliver to
+                </span>
+                <span className="flex-1 text-[14px] font-semibold truncate text-left" style={{ color: "var(--hb-fg)" }}>
+                  {locationLabel}
+                </span>
+                <Pencil size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
+              </button>
 
-                {/* Location dropdown */}
-                {locEditing && (
-                  <div
-                    className="absolute left-0 z-50 bg-white rounded-2xl p-4"
-                    style={{
-                      top: "calc(100% + 6px)",
-                      width: "min(340px, calc(100vw - 32px))",
-                      border: "1px solid var(--hb-border-soft)",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                    }}
-                  >
-                    <p className="text-[13px] font-bold mb-3" style={{ color: "var(--hb-fg)" }}>Deliver to</p>
+              {/* Inline location action buttons — always visible */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-3 pb-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUseGPS}
+                  disabled={locGPSLoading}
+                  className="flex items-center gap-2 text-[12.5px] font-semibold flex-1 justify-center"
+                  style={{ borderColor: "var(--hb-border-soft)", color: "var(--hb-fg)" }}
+                >
+                  {locGPSLoading ? (
+                    <Loader2 size={13} className="animate-spin" style={{ color: "var(--hb-primary)" }} />
+                  ) : (
+                    <MapPin size={13} style={{ color: "var(--hb-primary)" }} />
+                  )}
+                  Use my location
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setLocEditing(!locEditing); setLocInput(""); setLocSuggestions([]); setLocGPSError(null); }}
+                  className="flex items-center gap-2 text-[12.5px] font-semibold flex-1 justify-center"
+                  style={{ borderColor: "var(--hb-border-soft)", color: "var(--hb-fg)" }}
+                >
+                  <Pencil size={13} style={{ color: "var(--hb-fg-muted)" }} />
+                  Enter an address
+                </Button>
+              </div>
 
-                    {/* GPS button */}
-                    <button
-                      onClick={handleUseGPS}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold mb-3 transition-colors"
-                      style={{ border: "1px solid var(--hb-border-soft)", color: "var(--hb-fg)", background: "#FAFAF9" }}
-                    >
-                      <MapPin size={14} style={{ color: "var(--hb-primary)" }} />
-                      Use my current location
-                    </button>
+              {/* GPS error */}
+              {locGPSError && (
+                <p className="px-1 pb-1 text-[12px]" style={{ color: "#DC2626" }}>
+                  {locGPSError}
+                </p>
+              )}
 
-                    {/* Divider */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex-1 h-px" style={{ background: "var(--hb-border-soft)" }} />
-                      <span className="text-[10.5px]" style={{ color: "var(--hb-fg-muted)" }}>or enter an address</span>
-                      <div className="flex-1 h-px" style={{ background: "var(--hb-border-soft)" }} />
-                    </div>
-
-                    {/* Address input + suggestions */}
-                    <div className="relative">
-                      <input
-                        value={locInput}
-                        onChange={(e) => handleLocInputChange(e.target.value)}
-                        placeholder="Search any address"
-                        autoFocus
-                        className="w-full px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
+              {/* Inline address input — toggled by pill or "Enter an address" button */}
+              {locEditing && (
+                <div className="pb-3">
+                  <div className="relative">
+                    <input
+                      value={locInput}
+                      onChange={(e) => handleLocInputChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && locSuggestions.length > 0) {
+                          handleSelectSuggestion(locSuggestions[0]);
+                        }
+                      }}
+                      placeholder="Search any address"
+                      autoFocus
+                      className="w-full px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
+                      style={{
+                        background: "#F5F2ED",
+                        border: "1px solid var(--hb-border-soft)",
+                        color: "var(--hb-fg)",
+                      }}
+                    />
+                    {locSuggestions.length > 0 && (
+                      <div
+                        className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl overflow-hidden z-10"
                         style={{
-                          background: "#F5F2ED",
                           border: "1px solid var(--hb-border-soft)",
-                          color: "var(--hb-fg)",
+                          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                          maxHeight: 200,
+                          overflowY: "auto",
                         }}
-                      />
-                      {locSuggestions.length > 0 && (
-                        <div
-                          className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl overflow-hidden z-10"
-                          style={{
-                            border: "1px solid var(--hb-border-soft)",
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                            maxHeight: 200,
-                            overflowY: "auto",
-                          }}
-                        >
-                          {locSuggestions.map((s, i) => (
-                            <button
-                              key={i}
-                              onClick={() => handleSelectSuggestion(s)}
-                              className="w-full text-left px-3.5 py-2.5 text-[12px] transition-colors hover:bg-[#FBF7F1]"
-                              style={{
-                                color: "var(--hb-fg)",
-                                borderBottom: i < locSuggestions.length - 1 ? "1px solid var(--hb-border-soft)" : "none",
-                              }}
-                            >
-                              {s.display_name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Recent locations */}
-                    {recentLocs.length > 0 && locSuggestions.length === 0 && (
-                      <div className="mt-3">
-                        <p
-                          className="text-[10.5px] font-bold uppercase tracking-wider mb-2"
-                          style={{ color: "var(--hb-fg-muted)" }}
-                        >
-                          Recent
-                        </p>
-                        {recentLocs.map((r, i) => (
+                      >
+                        {locSuggestions.map((s, i) => (
                           <button
                             key={i}
-                            onClick={() => applyLocation(r.label, r.lat, r.lng)}
-                            className="w-full flex items-center gap-2.5 px-1 py-2 text-[12.5px] rounded-lg transition-colors hover:bg-[#FBF7F1]"
-                            style={{ color: "var(--hb-fg)" }}
+                            onClick={() => handleSelectSuggestion(s)}
+                            className="w-full text-left px-3.5 py-2.5 text-[12px] transition-colors hover:bg-[#FBF7F1]"
+                            style={{
+                              color: "var(--hb-fg)",
+                              borderBottom: i < locSuggestions.length - 1 ? "1px solid var(--hb-border-soft)" : "none",
+                            }}
                           >
-                            <Clock size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
-                            <span className="truncate">{r.label}</span>
+                            {s.display_name}
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
+
+                  {/* Recent locations */}
+                  {recentLocs.length > 0 && locSuggestions.length === 0 && (
+                    <div className="mt-3">
+                      <p
+                        className="text-[10.5px] font-bold uppercase tracking-wider mb-2"
+                        style={{ color: "var(--hb-fg-muted)" }}
+                      >
+                        Recent
+                      </p>
+                      {recentLocs.map((r, i) => (
+                        <button
+                          key={i}
+                          onClick={() => applyLocation(r.label, r.lat, r.lng)}
+                          className="w-full flex items-center gap-2.5 px-1 py-2 text-[12.5px] rounded-lg transition-colors hover:bg-[#FBF7F1]"
+                          style={{ color: "var(--hb-fg)" }}
+                        >
+                          <Clock size={12} style={{ color: "var(--hb-fg-muted)", flexShrink: 0 }} />
+                          <span className="truncate">{r.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Radius slider */}
               <div
                 className="px-1 pt-3.5 pb-1 transition-opacity"
-                style={{ opacity: showAll ? 0.4 : 1, pointerEvents: showAll ? "none" : "auto" }}
+                style={{ opacity: showAll ? 0.6 : 1 }}
               >
                 <div className="flex justify-between items-center mb-2">
                   <span
@@ -696,7 +712,7 @@ export default function CustomerDashboard() {
                   max="30"
                   step="0.5"
                   value={radiusMi}
-                  onChange={(e) => setRadiusMi(parseFloat(e.target.value))}
+                  onChange={(e) => { if (showAll) setShowAll(false); setRadiusMi(parseFloat(e.target.value)); }}
                   className="hb-range w-full"
                   style={{
                     background: `linear-gradient(to right, var(--hb-primary) 0%, var(--hb-primary) ${
