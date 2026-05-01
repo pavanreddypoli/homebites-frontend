@@ -111,6 +111,7 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  if (!dish) return null;
   if (!mounted || !dish) return null;
 
   const tags      = getDietaryTags(dish.description ?? "", ingredients);
