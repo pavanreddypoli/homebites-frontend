@@ -94,7 +94,7 @@ export default function HomeRestaurantDashboard() {
             <AlertCircle size={18} style={{ color: "var(--hb-primary)", flexShrink: 0 }} />
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-semibold" style={{ color: "var(--hb-fg)" }}>
-                Your kitchen is missing some info
+                Your Home Restaurant is missing some info
               </p>
               <p className="text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
                 Complete your profile to attract more customers

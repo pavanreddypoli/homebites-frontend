@@ -122,7 +122,7 @@ export default function CustomerNav({
                 className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
-                Restaurant Login
+                Home Restaurant Login
               </button>
               <button
                 onClick={() => (window.location.href = "/signup")}
@@ -158,17 +158,17 @@ export default function CustomerNav({
             <>
               <button
                 onClick={() => (window.location.href = "/login")}
-                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-medium transition-colors"
+                className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                 style={{ color: "#16202B", border: "1.5px solid #16202B" }}
               >
-                Login
+                Home Restaurant Login
               </button>
               <button
                 onClick={() => (window.location.href = "/signup")}
-                className="lg:hidden px-3 py-1 rounded-full text-[11px] font-semibold text-white transition-colors"
+                className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
                 style={{ background: "#FF7A39" }}
               >
-                Become a Chef
+                Become a Home Restaurant
               </button>
             </>
           )

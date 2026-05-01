@@ -168,7 +168,7 @@ export default function HomeRestaurantOnboarding() {
 
   /* ── Save step 1 ── */
   async function saveStep1() {
-    if (!kitchenName.trim()) { setMessage("Please enter your kitchen name."); return; }
+    if (!kitchenName.trim()) { setMessage("Please enter your restaurant name."); return; }
     setSaving(true); setMessage("");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = "/login"; return; }
@@ -219,7 +219,7 @@ export default function HomeRestaurantOnboarding() {
   /* ── Add dish ── */
   async function addDish() {
     if (!dishName.trim()) { setMessage("Enter a dish name."); return; }
-    if (!restaurantId) { setMessage("Save your kitchen info first."); return; }
+    if (!restaurantId) { setMessage("Save your restaurant info first."); return; }
     setAddingDish(true); setMessage("");
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -370,7 +370,7 @@ export default function HomeRestaurantOnboarding() {
                     <h2
                       className="text-[20px] font-bold tracking-tight leading-tight"
                       style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
-                    >Tell us about your kitchen</h2>
+                    >Tell us about your Home Restaurant</h2>
                     <p className="text-[13px] mt-0.5" style={{ color: "var(--hb-fg-muted)" }}>
                       Help customers know what to expect
                     </p>
@@ -547,7 +547,7 @@ export default function HomeRestaurantOnboarding() {
                       }}
                     />
                     <p className="text-[11px] mt-1" style={{ color: "var(--hb-fg-subtle)" }}>
-                      Customers outside this radius won't see your kitchen.
+                      Customers outside this radius won't see your restaurant.
                     </p>
                   </div>
 
@@ -824,10 +824,10 @@ export default function HomeRestaurantOnboarding() {
                     className="text-[24px] font-bold tracking-tight mb-2"
                     style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
                   >
-                    Your kitchen is live on HomeBites!
+                    Your Home Restaurant is live on HomeBites!
                   </h2>
                   <p className="text-[14px]" style={{ color: "var(--hb-fg-muted)" }}>
-                    Customers near you can now find and order from your kitchen.
+                    Customers near you can now find and order from your Home Restaurant.
                   </p>
                 </div>
 
@@ -871,7 +871,7 @@ export default function HomeRestaurantOnboarding() {
                     className="text-center text-[12.5px] mb-2"
                     style={{ color: "var(--hb-fg-muted)" }}
                   >
-                    Share your kitchen with friends
+                    Share your Home Restaurant with friends
                   </p>
                   <button
                     onClick={copyShareLink}

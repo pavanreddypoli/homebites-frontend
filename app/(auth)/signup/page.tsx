@@ -77,7 +77,7 @@ export default function SignupPage() {
             Start cooking for your community
           </h1>
           <p className="text-[14px] mb-6" style={{ color: "var(--hb-fg-muted)" }}>
-            Join HomeBites as a home chef
+            Join HomeBites as a Home Restaurant
           </p>
 
           <form
@@ -158,7 +158,7 @@ export default function SignupPage() {
                 boxShadow: "0 4px 14px -2px rgba(255,122,57,.45)",
               }}
             >
-              {loading ? "Creating account…" : "Create Chef Account"}
+              {loading ? "Creating account…" : "Create Home Restaurant Account"}
             </button>
           </form>
 

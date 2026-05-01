@@ -129,7 +129,7 @@ export default function CustomerDashboard() {
   // Filters
   const [selectedCuisine, setSelectedCuisine] = useState<string>("All");
   const [searchQuery, setSearchQuery]         = useState("");
-  const [radiusMi, setRadiusMi]               = useState(2);
+  const [radiusMi, setRadiusMi]               = useState(5);
 
   // Data
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -439,15 +439,15 @@ export default function CustomerDashboard() {
                 <input
                   type="range"
                   min="0.5"
-                  max="10"
-                  step="0.1"
+                  max="30"
+                  step="0.5"
                   value={radiusMi}
                   onChange={(e) => setRadiusMi(parseFloat(e.target.value))}
                   className="hb-range w-full"
                   style={{
                     background: `linear-gradient(to right, var(--hb-primary) 0%, var(--hb-primary) ${
-                      ((radiusMi - 0.5) / 9.5) * 100
-                    }%, #F0EBE3 ${((radiusMi - 0.5) / 9.5) * 100}%, #F0EBE3 100%)`,
+                      ((radiusMi - 0.5) / 29.5) * 100
+                    }%, #F0EBE3 ${((radiusMi - 0.5) / 29.5) * 100}%, #F0EBE3 100%)`,
                   }}
                 />
                 <div
@@ -455,7 +455,7 @@ export default function CustomerDashboard() {
                   style={{ color: "var(--hb-fg-subtle)" }}
                 >
                   <span>0.5 mi</span>
-                  <span>10 mi</span>
+                  <span>30 mi</span>
                 </div>
               </div>
 

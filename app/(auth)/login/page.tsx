@@ -53,10 +53,10 @@ export default function LoginPage() {
             className="font-bold text-[28px] lg:text-[32px] leading-[1.1] tracking-[-0.025em] mb-1"
             style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
           >
-            Welcome back, Chef
+            Welcome back to HomeBites
           </h1>
           <p className="text-[14px] mb-6" style={{ color: "var(--hb-fg-muted)" }}>
-            Sign in to your HomeBites kitchen
+            Sign in to your Home Restaurant
           </p>
 
           <form
@@ -123,7 +123,7 @@ export default function LoginPage() {
           )}
 
           <div className="text-center text-[13px] mt-5" style={{ color: "var(--hb-fg-muted)" }}>
-            New chef?{" "}
+            New Home Restaurant?{" "}
             <Link href="/signup" className="font-semibold" style={{ color: "var(--hb-primary)" }}>
               Create your account →
             </Link>
