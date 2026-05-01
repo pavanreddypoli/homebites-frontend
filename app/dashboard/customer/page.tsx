@@ -794,7 +794,7 @@ export default function CustomerDashboard() {
         {[
           { label: "Home",    Icon: House,   href: "/dashboard/customer", active: true  },
           { label: "Search",  Icon: Search,  href: "#",                   active: false },
-          { label: "Orders",  Icon: Package, href: "/dashboard/customer", active: false },
+          { label: "Orders",  Icon: Package, href: "/dashboard/customer/orders", active: false },
           { label: "Account", Icon: User,    href: "/login",              active: false },
         ].map(({ label, Icon, href, active }) => (
           <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
@@ -15,6 +15,7 @@ type Order = {
   tax: number;
   total: number;
   created_at: string;
+  status: string;
 };
 
 type OrderItem = {
@@ -24,6 +25,29 @@ type OrderItem = {
   quantity: number;
 };
 
+const CONFETTI_COLORS = ["#FF7A39", "#FFD700", "#FF69B4", "#00CED1", "#32CD32", "#9370DB", "#FF4500"];
+
+const steps = [
+  { label: "Order Placed",      icon: "✅", key: "placed"    },
+  { label: "Being Prepared",    icon: "🍳", key: "preparing" },
+  { label: "Ready for Pickup",  icon: "🎉", key: "ready"     },
+];
+
+function getStepState(status: string, stepIdx: number): "done" | "active" | "pending" {
+  if (status === "placed") {
+    if (stepIdx === 0) return "done";
+    if (stepIdx === 1) return "active";
+    return "pending";
+  }
+  if (status === "ready") {
+    if (stepIdx <= 1) return "done";
+    if (stepIdx === 2) return "active";
+    return "pending";
+  }
+  if (status === "completed") return "done";
+  return stepIdx === 0 ? "done" : "pending";
+}
+
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
   const router = useRouter();
@@ -31,13 +55,22 @@ export default function OrderConfirmationPage() {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const confettiPieces = useRef(
+    Array.from({ length: 32 }, (_, i) => ({
+      id: i,
+      left: `${(i / 32) * 100 + Math.random() * 3}%`,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: `${(i * 0.05).toFixed(2)}s`,
+      size: `${7 + (i % 5)}px`,
+      duration: `${2.2 + (i % 4) * 0.3}s`,
+    }))
+  );
 
   useEffect(() => {
     async function loadOrder() {
-      if (!orderId) {
-        setLoading(false);
-        return;
-      }
+      if (!orderId) { setLoading(false); return; }
 
       const { data, error: rpcError } = await supabase.rpc(
         "get_order_with_items",
@@ -50,12 +83,43 @@ export default function OrderConfirmationPage() {
         return;
       }
 
-      setOrder((data as any).order ?? null);
+      const loadedOrder = (data as any).order ?? null;
+      setOrder(loadedOrder);
       setItems(((data as any).items ?? []) as OrderItem[]);
       setLoading(false);
+
+      if (loadedOrder?.status === "ready") {
+        setShowConfetti(true);
+        document.title = "🎉 Order Ready! — HomeBites";
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
     }
 
     loadOrder();
+  }, [orderId]);
+
+  // Realtime: listen for status changes on this specific order
+  useEffect(() => {
+    if (!orderId) return;
+
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+        (payload) => {
+          const updated = payload.new as Partial<Order>;
+          setOrder((prev) => prev ? { ...prev, ...updated } : prev);
+          if (updated.status === "ready") {
+            setShowConfetti(true);
+            document.title = "🎉 Order Ready! — HomeBites";
+            setTimeout(() => setShowConfetti(false), 4000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [orderId]);
 
   if (loading) {
@@ -67,11 +131,47 @@ export default function OrderConfirmationPage() {
   }
 
   const shortId = order.id.slice(0, 8).toUpperCase();
+  const statusMsg =
+    order.status === "ready"
+      ? "🎉 Your order is ready for pickup!"
+      : order.status === "completed"
+      ? "✓ Order completed — thank you!"
+      : `Your order is being prepared by ${order.restaurant_name}.`;
 
   return (
     <Shell>
+      {/* Confetti overlay */}
+      {showConfetti && (
+        <>
+          <style>{`
+            @keyframes confetti-fall {
+              0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+              85%  { opacity: 1; }
+              100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+            }
+          `}</style>
+          <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+            {confettiPieces.current.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  position: "absolute",
+                  top: "-20px",
+                  left: p.left,
+                  width: p.size,
+                  height: p.size,
+                  background: p.color,
+                  borderRadius: p.id % 3 === 0 ? "50%" : "2px",
+                  animation: `confetti-fall ${p.duration} ${p.delay} ease-in forwards`,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="max-w-[760px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
-        {/* Hero confirmation card */}
+        {/* Hero card */}
         <div
           className="relative overflow-hidden rounded-3xl p-7 lg:p-10 mb-6"
           style={{
@@ -89,30 +189,27 @@ export default function OrderConfirmationPage() {
             >
               <CheckCircle2 size={26} strokeWidth={2.4} />
             </div>
-            <div
-              className="text-[11px] font-bold uppercase tracking-wider mb-2"
-              style={{ color: "#C24B12" }}
-            >
+            <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "#C24B12" }}>
               Order confirmed
             </div>
             <h1
               className="font-bold text-[28px] lg:text-[40px] leading-[1.05] tracking-[-0.025em] mb-2"
               style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
             >
-              Your order is on the way to{" "}
-              <span style={{ color: "var(--hb-primary)", fontStyle: "italic" }}>
-                being made
-              </span>
+              {order.status === "ready" ? (
+                <>Your food is{" "}
+                  <span style={{ color: "var(--hb-primary)", fontStyle: "italic" }}>ready!</span>
+                </>
+              ) : (
+                <>Your order is on the way to{" "}
+                  <span style={{ color: "var(--hb-primary)", fontStyle: "italic" }}>being made</span>
+                </>
+              )}
             </h1>
-            <p
-              className="text-[14px] lg:text-[15px] leading-[1.55]"
-              style={{ color: "var(--hb-fg-muted)" }}
-            >
-              <b style={{ color: "var(--hb-fg)" }}>{order.restaurant_name}</b> is preparing
-              your meal. We'll notify you when it's ready for pickup.
+            <p className="text-[14px] lg:text-[15px] leading-[1.55]" style={{ color: "var(--hb-fg-muted)" }}>
+              {statusMsg}
             </p>
 
-            {/* Order ID pill */}
             <div className="flex items-center gap-2 mt-5">
               <button
                 onClick={async () => {
@@ -142,31 +239,89 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
+        {/* Progress tracker */}
+        <div
+          className="bg-white rounded-2xl p-5 mb-4"
+          style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
+        >
+          <h3
+            className="font-bold uppercase tracking-wider mb-5 text-[11.5px]"
+            style={{ color: "var(--hb-fg-muted)", letterSpacing: "0.06em" }}
+          >
+            Order status
+          </h3>
+          <div className="flex items-start">
+            {steps.map((step, idx) => {
+              const state = getStepState(order.status, idx);
+              return (
+                <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                  {/* Connector line */}
+                  {idx < steps.length - 1 && (
+                    <div
+                      className="absolute top-[14px] left-1/2 w-full h-[2px]"
+                      style={{
+                        background: getStepState(order.status, idx + 1) !== "pending"
+                          ? "var(--hb-primary)"
+                          : "var(--hb-border-soft)",
+                        zIndex: 0,
+                      }}
+                    />
+                  )}
+                  {/* Circle */}
+                  <div
+                    className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center text-[13px] mb-2 flex-shrink-0"
+                    style={{
+                      background:
+                        state === "done"   ? "var(--hb-primary)" :
+                        state === "active" ? "var(--hb-primary)" :
+                        "var(--hb-border-soft)",
+                      boxShadow: state === "active" ? "0 0 0 4px rgba(255,122,57,0.2)" : "none",
+                      animation: state === "active" ? "pulse 2s infinite" : "none",
+                    }}
+                  >
+                    {state === "done" ? (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      <span style={{ fontSize: "12px" }}>{step.icon}</span>
+                    )}
+                  </div>
+                  {/* Label */}
+                  <p
+                    className="text-[11px] font-semibold text-center leading-tight px-1"
+                    style={{
+                      color: state === "pending" ? "var(--hb-fg-muted)" : "var(--hb-fg)",
+                    }}
+                  >
+                    {step.label}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Pickup card */}
         <Card title="Pickup details" icon={<Store size={14} />}>
           <p className="text-[15px] font-semibold" style={{ color: "var(--hb-fg)" }}>
             {order.restaurant_name}
           </p>
-          <div
-            className="flex items-center gap-2 mt-2 text-[13px]"
-            style={{ color: "var(--hb-fg-muted)" }}
-          >
+          <div className="flex items-center gap-2 mt-2 text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
             <Clock size={13} style={{ color: "var(--hb-primary)" }} />
             <span>
-              <b style={{ color: "var(--hb-fg)" }}>Ready in 25–35 min</b> · We'll text you
-              when it's ready
+              <b style={{ color: "var(--hb-fg)" }}>Ready in 25–35 min</b> · We'll notify you when it's ready
             </span>
           </div>
           <div
             className="mt-3 p-3 rounded-xl text-[13px] leading-[1.55]"
             style={{ background: "#FBF7F1", color: "var(--hb-fg-muted)" }}
           >
-            Please pick up your order directly from the home restaurant. Bring your order
-            ID — they'll be expecting you.
+            Please pick up your order directly from the home restaurant. Bring your order ID — they'll be expecting you.
           </div>
         </Card>
 
-        {/* Items + totals */}
+        {/* Order summary */}
         <Card title="Order summary" icon={<Receipt size={14} />} className="mt-4">
           <div className="space-y-2.5">
             {items.map((item) => (
@@ -174,9 +329,7 @@ export default function OrderConfirmationPage() {
                 <span style={{ color: "var(--hb-fg)" }}>
                   <b>{item.quantity}×</b> {item.dish_name}
                 </span>
-                <span
-                  style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}
-                >
+                <span style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}>
                   ${(item.price * item.quantity).toFixed(2)}
                 </span>
               </div>
@@ -185,10 +338,7 @@ export default function OrderConfirmationPage() {
 
           <hr className="my-4" style={{ borderColor: "var(--hb-border-soft)" }} />
 
-          <div
-            className="space-y-1.5 text-[13px]"
-            style={{ color: "var(--hb-fg-muted)" }}
-          >
+          <div className="space-y-1.5 text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
             <Row label="Subtotal" value={`$${order.subtotal.toFixed(2)}`} />
             <Row label="Service fee" value={`$${order.service_fee.toFixed(2)}`} />
             <Row label="Tax" value={`$${order.tax.toFixed(2)}`} />
@@ -196,19 +346,13 @@ export default function OrderConfirmationPage() {
 
           <div
             className="flex justify-between font-bold text-[18px] pt-3 mt-3"
-            style={{
-              color: "var(--hb-fg)",
-              borderTop: "1px solid var(--hb-border-soft)",
-            }}
+            style={{ color: "var(--hb-fg)", borderTop: "1px solid var(--hb-border-soft)" }}
           >
             <span style={{ fontFamily: "var(--font-display)" }}>Total paid</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>
-              ${order.total.toFixed(2)}
-            </span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>${order.total.toFixed(2)}</span>
           </div>
         </Card>
 
-        {/* CTA */}
         <button
           className="w-full mt-6 py-3.5 rounded-full font-bold text-[15px] text-white transition-colors"
           style={{
@@ -262,18 +406,11 @@ function Card({
   return (
     <section
       className={`bg-white rounded-2xl p-5 ${className}`}
-      style={{
-        border: "1px solid var(--hb-border-soft)",
-        boxShadow: "var(--hb-shadow-soft)",
-      }}
+      style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
     >
       <h3
         className="flex items-center gap-2 font-bold uppercase tracking-wider mb-3"
-        style={{
-          color: "var(--hb-fg-muted)",
-          letterSpacing: "0.06em",
-          fontSize: "11.5px",
-        }}
+        style={{ color: "var(--hb-fg-muted)", letterSpacing: "0.06em", fontSize: "11.5px" }}
       >
         {icon} {title}
       </h3>
