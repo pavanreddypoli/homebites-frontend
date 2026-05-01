@@ -127,26 +127,59 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - When adding a new page under `home-restaurant/`, add its link to `NavBar.tsx`.
 - After editing cart logic in `lib/cart.ts`, verify both the customer dashboard inline +/− and the CartDrawer still work correctly.
 
-## 8-Week Plan
+## Current Status — Last updated: May 1, 2026
 
-- Week 1: DONE ✅ — RLS security, auth guards, currency fix, bug fixes
-- Week 2: DONE ✅ — Stripe payments, guest checkout, order confirmation
-- Week 3-4: IN PROGRESS 🔄 — DoorDash-style UI, mobile responsive, design system applied
-- Week 5-6: PENDING — Ratings, realtime orders, chef analytics
-- Week 7: PENDING — AI search
-- Week 8: PENDING — Launch prep
+### ✅ Week 1 — DONE
+- RLS policies on all 4 Supabase tables
+- Auth guard on customer dashboard
+- Currency bug fixed (₹ → $)
+- Stripe keys configured
+- Security bugs fixed
 
-## Current State
+### ✅ Week 2 — DONE
+- Stripe Payment Element integrated
+- Guest checkout (no login required)
+- Order confirmation page working
+- Chef email notifications via Resend
+- Webhook handler created
+- Real test orders placed and confirmed
 
-- App is live at homebitesai.com
-- Desktop layout: DoorDash-style with left sidebar, working
-- Mobile layout: in progress
-- All customer pages need design system applied
-- Chef dashboard pages need design system applied
-- Stripe payments working in test mode
-- Guest checkout working
-- RLS enabled on all tables
-- Emails: working but need custom domain for production
+### 🔄 Weeks 3-4 — IN PROGRESS
+- ✅ DoorDash-style desktop UI built
+- ✅ Design system (Fraunces + Inter fonts, orange brand colors) applied
+- ✅ Mobile responsive layout (sidebar hidden, bottom nav, 4-col grid)
+- ✅ Dish detail bottom sheet with nutrition facts
+- ✅ 4-column menu grid on restaurant page
+- ✅ Chef signup rebuilt as 4-step onboarding wizard
+- ✅ Terminology: "Home Restaurant" used throughout (not "chef")
+- ✅ "Become a Home Restaurant" + "Home Restaurant Login" buttons
+- ✅ Signup info card explaining what account is for
+- ✅ Search radius set to 30 miles max
+- ✅ Dismissible cart bar with swipe gesture
+- ✅ Zero TypeScript errors
+- ✅ Live at homebitesai.com
+- ❌ Loading skeleton states not done
+- ❌ Error boundaries not done
+- ❌ window.location.href replacements not complete
+
+### ⬜ Weeks 5-6 — NOT STARTED (next priority)
+- Chef availability toggle (open/closed)
+- Real-time order status (Supabase Realtime)
+- Ratings & reviews
+- Chef earnings summary
+- Customer order history page
+
+### ⬜ Week 7 — NOT STARTED
+- AI search (Anthropic API)
+- AI menu description writer
+
+### ⬜ Week 8 — NOT STARTED
+- Launch prep, Sentry, 10 chefs onboarded
+
+## Next Session — Start Here
+1. Read CLAUDE.md fully
+2. Tell Pavan: "Ready to continue. Last session we completed Weeks 1-2 fully and most of Weeks 3-4. Next priority is Week 5-6: chef availability toggle, then real-time orders, then ratings."
+3. Ask Pavan: "Which do you want to start with today?"
 
 ## Git Rules
 
