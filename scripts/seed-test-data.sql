@@ -6,146 +6,146 @@
 
 -- ── Step 1: Test auth users ──────────────────────────────────
 -- 20 fake restaurant owners (won't be used for real login)
+-- User IDs follow pattern: feed000N-feed-feed-feed-feed0000000N
 INSERT INTO auth.users (
-  id, aud, role, email, encrypted_password,
-  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-  created_at, updated_at,
-  confirmation_token, recovery_token, email_change_token_new, email_change,
-  is_sso_user
+  id, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  raw_user_meta_data, role, aud
 ) VALUES
-  ('cafe0001-cafe-cafe-cafe-cafe00000001','authenticated','authenticated','chef_ammas@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000002','authenticated','authenticated','chef_casa@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000003','authenticated','authenticated','chef_pho@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000004','authenticated','authenticated','chef_curry@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000005','authenticated','authenticated','chef_priya@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000006','authenticated','authenticated','chef_manila@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000007','authenticated','authenticated','chef_dragon@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000008','authenticated','authenticated','chef_medbreeze@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000009','authenticated','authenticated','chef_bkdesi@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000a','authenticated','authenticated','chef_queens@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000b','authenticated','authenticated','chef_chwok@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000c','authenticated','authenticated','chef_spicech@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000d','authenticated','authenticated','chef_sabor@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000e','authenticated','authenticated','chef_thaiorchid@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe0000000f','authenticated','authenticated','chef_seapho@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000010','authenticated','authenticated','chef_atldesi@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000011','authenticated','authenticated','chef_jcbiryani@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000012','authenticated','authenticated','chef_fairfax@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000013','authenticated','authenticated','chef_pxtandoor@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false),
-  ('cafe0001-cafe-cafe-cafe-cafe00000014','authenticated','authenticated','chef_bostoncurry@homebites-test.com','','2024-01-01 00:00:00+00','{"provider":"email","providers":["email"]}','{"role":"home_restaurant"}',now(),now(),'','','','',false)
+  ('feed0001-feed-feed-feed-feed00000001','amma.kitchen@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0002-feed-feed-feed-feed00000002','casa.rodriguez@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0003-feed-feed-feed-feed00000003','pho.saigon@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0004-feed-feed-feed-feed00000004','curry.house@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0005-feed-feed-feed-feed00000005','priya.kitchen@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0006-feed-feed-feed-feed00000006','manila.flavors@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0007-feed-feed-feed-feed00000007','dragon.house@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0008-feed-feed-feed-feed00000008','med.breeze@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0009-feed-feed-feed-feed00000009','brooklyn.desi@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000a-feed-feed-feed-feed0000000a','queens.night@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000b-feed-feed-feed-feed0000000b','chicago.wok@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000c-feed-feed-feed-feed0000000c','spice.india@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000d-feed-feed-feed-feed0000000d','sabor.latino@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000e-feed-feed-feed-feed0000000e','thai.orchid@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed000f-feed-feed-feed-feed0000000f','seattle.pho@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0010-feed-feed-feed-feed00000010','atlanta.desi@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0011-feed-feed-feed-feed00000011','jc.biryani@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0012-feed-feed-feed-feed00000012','fairfax.tiffin@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0013-feed-feed-feed-feed00000013','phoenix.tandoor@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated'),
+  ('feed0014-feed-feed-feed-feed00000014','boston.curry@homebites-test.com','$2a$10$PX.VtBbDlisVEtHvhDsWQOmMBCGYSCDJpkZjUYCFGKrDaRsSlvxsO','2024-01-01 00:00:00+00',now(),now(),'{"role":"home_restaurant"}','authenticated','authenticated')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Step 2: Home restaurants ─────────────────────────────────
+-- user_id references auth.users IDs inserted above (feed000N-... pattern)
 INSERT INTO public.home_restaurants
   (id, user_id, name, cuisine, description, city, lat, lng, delivery_radius_km, is_active, is_open, hours)
 VALUES
   -- TEXAS
-  ('feed0001-feed-feed-feed-feed00000001','cafe0001-cafe-cafe-cafe-cafe00000001',
+  ('feed0001-feed-feed-feed-feed00000001','feed0001-feed-feed-feed-feed00000001',
    'Amma''s South Indian Kitchen','South Indian',
    'Authentic South Indian home cooking — crispy dosas, fluffy idlis, and aromatic biryanis made with love by Amma''s family recipes.',
    'Celina, TX',33.2998,-96.7836,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000002','cafe0001-cafe-cafe-cafe-cafe00000002',
+  ('feed0001-feed-feed-feed-feed00000002','feed0002-feed-feed-feed-feed00000002',
    'Casa Rodriguez','Mexican',
    'Homemade Mexican classics — tacos, enchiladas, and tamales from a Dallas family kitchen. Every bite tastes like abuela made it.',
    'Dallas, TX',32.7767,-96.7970,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000003','cafe0001-cafe-cafe-cafe-cafe00000003',
+  ('feed0001-feed-feed-feed-feed00000003','feed0003-feed-feed-feed-feed00000003',
    'Pho Saigon Home','Vietnamese',
    'Houston''s favorite homestyle Vietnamese kitchen. Rich 12-hour pho broth, crispy spring rolls, and authentic banh mi.',
    'Houston, TX',29.7604,-95.3698,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000004','cafe0001-cafe-cafe-cafe-cafe00000004',
+  ('feed0001-feed-feed-feed-feed00000004','feed0004-feed-feed-feed-feed00000004',
    'The Curry House','Indian',
    'North Indian comfort food in the heart of Austin. Creamy curries, fresh-baked naan, and warming dal from a family kitchen.',
    'Austin, TX',30.2672,-97.7431,25,true,true,'11 AM – 9 PM'),
 
   -- CALIFORNIA
-  ('feed0001-feed-feed-feed-feed00000005','cafe0001-cafe-cafe-cafe-cafe00000005',
+  ('feed0001-feed-feed-feed-feed00000005','feed0005-feed-feed-feed-feed00000005',
    'Priya''s Kitchen','South Indian',
    'Bangalore-style home cooking in San Jose. Crispy masala dosas, comforting sambar rice, and the best rasam you''ve had outside India.',
    'San Jose, CA',37.3382,-121.8863,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000006','cafe0001-cafe-cafe-cafe-cafe00000006',
+  ('feed0001-feed-feed-feed-feed00000006','feed0006-feed-feed-feed-feed00000006',
    'Manila Flavors','Filipino',
    'Homestyle Filipino cooking bringing the tastes of Manila to LA. Slow-cooked adobo, sinigang, and classic pancit made fresh daily.',
    'Los Angeles, CA',34.0522,-118.2437,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000007','cafe0001-cafe-cafe-cafe-cafe00000007',
+  ('feed0001-feed-feed-feed-feed00000007','feed0007-feed-feed-feed-feed00000007',
    'Dragon House','Chinese',
    'Cantonese home cooking from a San Francisco kitchen. Hand-folded dim sum, wok-fried classics, and grandma''s legendary hot and sour soup.',
    'San Francisco, CA',37.7749,-122.4194,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed00000008','cafe0001-cafe-cafe-cafe-cafe00000008',
+  ('feed0001-feed-feed-feed-feed00000008','feed0008-feed-feed-feed-feed00000008',
    'Mediterranean Breeze','Mediterranean',
    'Fresh Mediterranean home cooking in San Diego. Creamy hummus, slow-roasted shawarma, and crispy falafel with house-made sauces.',
    'San Diego, CA',32.7157,-117.1611,25,true,true,'11 AM – 9 PM'),
 
   -- NEW YORK
-  ('feed0001-feed-feed-feed-feed00000009','cafe0001-cafe-cafe-cafe-cafe00000009',
+  ('feed0001-feed-feed-feed-feed00000009','feed0009-feed-feed-feed-feed00000009',
    'Brooklyn Desi Kitchen','Indian',
    'North Indian street food and home cooking in Brooklyn. Bold chole bhature, comforting rajma chawal, and flaky parathas.',
    'Brooklyn, NY',40.6782,-73.9442,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed0000000a','cafe0001-cafe-cafe-cafe-cafe0000000a',
+  ('feed0001-feed-feed-feed-feed0000000a','feed000a-feed-feed-feed-feed0000000a',
    'Queens Night Market Bowls','Asian',
    'Inspired by the Queens night market — Korean BBQ bowls, pad thai, and comforting bibimbap all made from scratch.',
    'Queens, NY',40.7282,-73.7949,25,true,true,'11 AM – 9 PM'),
 
   -- ILLINOIS
-  ('feed0001-feed-feed-feed-feed0000000b','cafe0001-cafe-cafe-cafe-cafe0000000b',
+  ('feed0001-feed-feed-feed-feed0000000b','feed000b-feed-feed-feed-feed0000000b',
    'Chicago Home Wok','Chinese',
    'Classic Chinese takeout flavors made at home with better ingredients. General Tso''s, lo mein, and hand-rolled egg rolls.',
    'Chicago, IL',41.8781,-87.6298,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed0000000c','cafe0001-cafe-cafe-cafe-cafe0000000c',
+  ('feed0001-feed-feed-feed-feed0000000c','feed000c-feed-feed-feed-feed0000000c',
    'Spice of India Chicago','Indian',
    'Rich Mughlai and Punjabi cooking from a Chicago kitchen. Slow-braised lamb curry, fragrant biryani, and crispy samosas.',
    'Chicago, IL',41.8781,-87.6298,25,true,true,'11 AM – 9 PM'),
 
   -- FLORIDA
-  ('feed0001-feed-feed-feed-feed0000000d','cafe0001-cafe-cafe-cafe-cafe0000000d',
+  ('feed0001-feed-feed-feed-feed0000000d','feed000d-feed-feed-feed-feed0000000d',
    'Sabor Latino Miami','Latin',
    'Cuban and Latin Caribbean home cooking in Miami. Slow-cooked ropa vieja, golden tostones, and the perfect Cuban sandwich.',
    'Miami, FL',25.7617,-80.1918,25,true,true,'11 AM – 9 PM'),
 
-  ('feed0001-feed-feed-feed-feed0000000e','cafe0001-cafe-cafe-cafe-cafe0000000e',
+  ('feed0001-feed-feed-feed-feed0000000e','feed000e-feed-feed-feed-feed0000000e',
    'Thai Orchid Home','Thai',
    'Authentic Thai home cooking in Orlando. Pad thai, fragrant green curry, and tom yum made with fresh herbs and spices.',
    'Orlando, FL',28.5383,-81.3792,25,true,true,'11 AM – 9 PM'),
 
   -- WASHINGTON
-  ('feed0001-feed-feed-feed-feed0000000f','cafe0001-cafe-cafe-cafe-cafe0000000f',
+  ('feed0001-feed-feed-feed-feed0000000f','feed000f-feed-feed-feed-feed0000000f',
    'Seattle Pho House','Vietnamese',
    'Warming Vietnamese classics perfect for Seattle weather. Pho bo with 14-hour broth, crispy banh xeo, and spicy bun bo hue.',
    'Seattle, WA',47.6062,-122.3321,25,true,true,'11 AM – 9 PM'),
 
   -- GEORGIA
-  ('feed0001-feed-feed-feed-feed00000010','cafe0001-cafe-cafe-cafe-cafe00000010',
+  ('feed0001-feed-feed-feed-feed00000010','feed0010-feed-feed-feed-feed00000010',
    'Atlanta Desi Dhaba','Indian',
    'Homestyle North Indian cooking in Atlanta. Aromatic biryani, silky butter naan, and rich paneer makhani like you''d find in Delhi.',
    'Atlanta, GA',33.7490,-84.3880,25,true,true,'11 AM – 9 PM'),
 
   -- NEW JERSEY
-  ('feed0001-feed-feed-feed-feed00000011','cafe0001-cafe-cafe-cafe-cafe00000011',
+  ('feed0001-feed-feed-feed-feed00000011','feed0011-feed-feed-feed-feed00000011',
    'Jersey City Biryani House','Indian',
    'Hyderabadi biryani specialists in Jersey City. Slow-dum cooked biryani, tender mutton curry, and smoky shami kebabs.',
    'Jersey City, NJ',40.7178,-74.0431,25,true,true,'11 AM – 9 PM'),
 
   -- VIRGINIA
-  ('feed0001-feed-feed-feed-feed00000012','cafe0001-cafe-cafe-cafe-cafe00000012',
+  ('feed0001-feed-feed-feed-feed00000012','feed0012-feed-feed-feed-feed00000012',
    'Fairfax Tiffin','South Indian',
    'Chennai-style tiffin in Fairfax. Perfect crispy-outside-soft-inside masala dosa, rava idli, and sambar made with fresh vegetables.',
    'Fairfax, VA',38.8462,-77.3064,25,true,true,'11 AM – 9 PM'),
 
   -- ARIZONA
-  ('feed0001-feed-feed-feed-feed00000013','cafe0001-cafe-cafe-cafe-cafe00000013',
+  ('feed0001-feed-feed-feed-feed00000013','feed0013-feed-feed-feed-feed00000013',
    'Phoenix Tandoor','Indian',
    'Tandoor-grilled delights and creamy curries in Phoenix. Charred tandoori chicken, velvety butter chicken, and homemade kheer.',
    'Phoenix, AZ',33.4484,-112.0740,25,true,true,'11 AM – 9 PM'),
 
   -- MASSACHUSETTS
-  ('feed0001-feed-feed-feed-feed00000014','cafe0001-cafe-cafe-cafe-cafe00000014',
+  ('feed0001-feed-feed-feed-feed00000014','feed0014-feed-feed-feed-feed00000014',
    'Boston Curry Corner','Indian',
    'South Indian seafood and curries from a Boston kitchen. Fresh fish curry, spicy prawn masala, and crispy papadum.',
    'Boston, MA',42.3601,-71.0589,25,true,true,'11 AM – 9 PM')
@@ -283,5 +283,5 @@ VALUES
 ('feed0001-feed-feed-feed-feed00000014','Papadum','Thin crispy lentil crackers with chutneys',2.99,'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400','urad dal, cumin, black pepper');
 
 -- ── Done! ──────────────────────────────────────────────────
--- You should now have 20 restaurants and ~80 dishes in Supabase.
+-- You should now have 20 auth users, 20 restaurants, and ~80 dishes in Supabase.
 -- Set your search radius to 30 mi and zoom out to see all restaurants.
