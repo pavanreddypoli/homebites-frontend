@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ChefNav from "@/components/ChefNav";
-import { UtensilsCrossed, Sparkles, ClipboardList, AlertCircle } from "lucide-react";
+import { UtensilsCrossed, Sparkles, ClipboardList, AlertCircle, Star } from "lucide-react";
 
 export default function HomeRestaurantDashboard() {
   const router = useRouter();
@@ -14,6 +14,9 @@ export default function HomeRestaurantDashboard() {
 
   // Availability toggle
   const [isOpen, setIsOpen]             = useState(true);
+
+  // Reviews
+  const [reviews, setReviews] = useState<{ rating: number; comment?: string | null; created_at: string }[]>([]);
   const [closedMessage, setClosedMessage] = useState("");
   const [savingMsg, setSavingMsg]       = useState(false);
   const [toast, setToast]               = useState<string | null>(null);
@@ -44,6 +47,14 @@ export default function HomeRestaurantDashboard() {
         .eq("home_restaurant_id", data.id);
 
       setDishCount(count ?? 0);
+
+      const { data: reviewData } = await supabase
+        .from("reviews")
+        .select("rating, comment, created_at")
+        .eq("restaurant_id", data.id)
+        .order("created_at", { ascending: false });
+      setReviews(reviewData || []);
+
       setLoading(false);
     }
     checkProfile();
@@ -87,6 +98,10 @@ export default function HomeRestaurantDashboard() {
 
   const profileIncomplete =
     !restaurant?.description || !restaurant?.hours || dishCount === 0;
+
+  const avgRating    = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
+  const reviewCount  = reviews.length;
+  const recentReviews = reviews.slice(0, 3);
 
   const cards = [
     {
@@ -184,6 +199,77 @@ export default function HomeRestaurantDashboard() {
                 {savingMsg ? "Saving…" : "Save"}
               </button>
             </div>
+          )}
+        </div>
+
+        {/* ── Ratings summary card ── */}
+        <div
+          className="bg-white rounded-2xl p-5 mb-6"
+          style={{ border: "1px solid #EDE3D2", boxShadow: "var(--hb-shadow-soft)" }}
+        >
+          <p className="text-[16px] font-semibold mb-3" style={{ color: "var(--hb-fg)" }}>
+            Customer Reviews
+          </p>
+          {reviewCount === 0 ? (
+            <p className="text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
+              No reviews yet — your first order is the start!
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <span
+                  className="text-[42px] font-bold leading-none"
+                  style={{ color: "var(--hb-primary)", fontFamily: "var(--font-display)" }}
+                >
+                  {avgRating!.toFixed(1)}
+                </span>
+                <div>
+                  <div className="flex gap-0.5 mb-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={18}
+                        fill={s <= Math.round(avgRating!) ? "#FFB400" : "none"}
+                        stroke={s <= Math.round(avgRating!) ? "#FFB400" : "#D1D5DB"}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[12px]" style={{ color: "var(--hb-fg-muted)" }}>
+                    {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {recentReviews.map((rev, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-xl"
+                    style={{ background: "#FBF7F1", border: "1px solid #EDE3D2" }}
+                  >
+                    <div className="flex items-center gap-1 mb-1.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={12}
+                          fill={s <= rev.rating ? "#FFB400" : "none"}
+                          stroke={s <= rev.rating ? "#FFB400" : "#D1D5DB"}
+                        />
+                      ))}
+                    </div>
+                    {rev.comment ? (
+                      <p className="text-[12px] leading-[1.55]" style={{ color: "var(--hb-fg)" }}>
+                        "{rev.comment}"
+                      </p>
+                    ) : (
+                      <p className="text-[12px] italic" style={{ color: "var(--hb-fg-muted)" }}>No comment</p>
+                    )}
+                    <p className="text-[11px] mt-1" style={{ color: "var(--hb-fg-muted)" }}>
+                      {new Date(rev.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 

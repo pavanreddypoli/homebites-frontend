@@ -19,6 +19,8 @@ export type SheetDish = {
   restaurant_id: string;
   restaurant_name?: string;
   restaurant_cuisine?: string;
+  restaurant_avg_rating?: number;
+  restaurant_review_count?: number;
 };
 
 interface Props {
@@ -241,12 +243,15 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
                 ${Number(dish.price).toFixed(2)}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
-              <Star size={13} fill="#FFB400" stroke="#FFB400" />
-              <span className="text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
-                <b style={{ color: "var(--hb-fg)" }}>4.8</b> (120 ratings)
-              </span>
-            </div>
+            {dish.restaurant_avg_rating != null && dish.restaurant_review_count != null && dish.restaurant_review_count > 0 && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <Star size={13} fill="#FFB400" stroke="#FFB400" />
+                <span className="text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
+                  <b style={{ color: "var(--hb-fg)" }}>{dish.restaurant_avg_rating.toFixed(1)}</b>{" "}
+                  ({dish.restaurant_review_count} {dish.restaurant_review_count === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Description */}

@@ -32,6 +32,8 @@ type Restaurant = {
   distance_km?: number;
   is_open?: boolean;
   closed_message?: string | null;
+  avg_rating?: number;
+  review_count?: number;
 };
 
 type Dish = {
@@ -221,7 +223,7 @@ export default function CustomerDashboard() {
     async function loadData() {
       setLoading(true);
 
-      const [{ data: restaurantData }, { data: dishData }] = await Promise.all([
+      const [{ data: restaurantData }, { data: dishData }, { data: reviewData }] = await Promise.all([
         supabase
           .from("home_restaurants")
           .select("id, name, cuisine, description, city, lat, lng, delivery_radius_km, is_open, closed_message")
@@ -229,9 +231,26 @@ export default function CustomerDashboard() {
         supabase
           .from("dishes")
           .select("id, name, description, price, home_restaurant_id, image_url"),
+        supabase
+          .from("reviews")
+          .select("restaurant_id, rating"),
       ]);
 
-      let enriched: Restaurant[] = restaurantData ?? [];
+      // Build per-restaurant rating stats
+      const ratingStats = new Map<string, { sum: number; count: number }>();
+      reviewData?.forEach((rev: any) => {
+        const s = ratingStats.get(rev.restaurant_id) ?? { sum: 0, count: 0 };
+        ratingStats.set(rev.restaurant_id, { sum: s.sum + rev.rating, count: s.count + 1 });
+      });
+
+      let enriched: Restaurant[] = (restaurantData ?? []).map((r) => {
+        const s = ratingStats.get(r.id);
+        return {
+          ...r,
+          avg_rating:   s && s.count > 0 ? s.sum / s.count : undefined,
+          review_count: s?.count ?? 0,
+        };
+      });
 
       if (location) {
         enriched = enriched.map((r) =>
@@ -733,16 +752,21 @@ export default function CustomerDashboard() {
                 onAdd={() => addToCart(d)}
                 onInc={() => addToCart(d)}
                 onDec={() => setInlineQty(d.id, getQty(d.id) - 1)}
-                onOpenSheet={() => setSelectedDish({
-                  id: d.id,
-                  name: d.name,
-                  description: d.description,
-                  price: d.price,
-                  image_url: d.image_url,
-                  restaurant_id: d.home_restaurant_id,
-                  restaurant_name: d.restaurant_name,
-                  restaurant_cuisine: d.restaurant_cuisine,
-                })}
+                onOpenSheet={() => {
+                  const rest = restaurants.find((r) => r.id === d.home_restaurant_id);
+                  setSelectedDish({
+                    id: d.id,
+                    name: d.name,
+                    description: d.description,
+                    price: d.price,
+                    image_url: d.image_url,
+                    restaurant_id: d.home_restaurant_id,
+                    restaurant_name: d.restaurant_name,
+                    restaurant_cuisine: d.restaurant_cuisine,
+                    restaurant_avg_rating: rest?.avg_rating,
+                    restaurant_review_count: rest?.review_count,
+                  });
+                }}
               />
             ))}
           </div>
@@ -918,13 +942,15 @@ function RestaurantCard({ r }: { r: Restaurant }) {
             {r.name}
           </p>
           {/* Rating — desktop only, beside name */}
-          <span
-            className="hidden lg:flex items-center gap-0.5 text-[12px] font-bold whitespace-nowrap"
-            style={{ color: "var(--hb-fg)" }}
-          >
-            <Star size={11} fill="#FFB400" stroke="#FFB400" />
-            4.9
-          </span>
+          {r.avg_rating != null && r.review_count != null && r.review_count > 0 && (
+            <span
+              className="hidden lg:flex items-center gap-0.5 text-[12px] font-bold whitespace-nowrap"
+              style={{ color: "var(--hb-fg)" }}
+            >
+              <Star size={11} fill="#FFB400" stroke="#FFB400" />
+              {r.avg_rating.toFixed(1)}
+            </span>
+          )}
         </div>
 
         {/* Cuisine — desktop only */}
@@ -937,10 +963,14 @@ function RestaurantCard({ r }: { r: Restaurant }) {
           className="lg:hidden flex items-center gap-1 mt-0.5"
           style={{ color: "var(--hb-fg-subtle)" }}
         >
-          <Star size={9} fill="#FFB400" stroke="#FFB400" />
-          <span className="text-[10px]">4.9</span>
+          {r.avg_rating != null && r.review_count != null && r.review_count > 0 && (
+            <>
+              <Star size={9} fill="#FFB400" stroke="#FFB400" />
+              <span className="text-[10px]">{r.avg_rating.toFixed(1)}</span>
+            </>
+          )}
           {r.distance_km != null && (
-            <span className="text-[10px]">· {kmToMi(r.distance_km).toFixed(1)} mi</span>
+            <span className="text-[10px]">{r.avg_rating != null && r.review_count != null && r.review_count > 0 ? "· " : ""}{kmToMi(r.distance_km).toFixed(1)} mi</span>
           )}
         </div>
 

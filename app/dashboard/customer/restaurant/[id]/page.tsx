@@ -67,6 +67,11 @@ export default function RestaurantMenuPage() {
   // Dish sheet
   const [selectedDish, setSelectedDish] = useState<SheetDish | null>(null);
 
+  // Reviews
+  const [reviews, setReviews] = useState<{ id: string; rating: number; comment?: string | null; created_at: string }[]>([]);
+  const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
+  const reviewCount = reviews.length;
+
   // Share restaurant
   const [shared, setShared] = useState(false);
 
@@ -86,7 +91,7 @@ export default function RestaurantMenuPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [{ data: restaurantData }, { data: dishData }] = await Promise.all([
+      const [{ data: restaurantData }, { data: dishData }, { data: reviewData }] = await Promise.all([
         supabase
           .from("home_restaurants")
           .select("id, name, cuisine, description, city, is_open, closed_message")
@@ -97,9 +102,16 @@ export default function RestaurantMenuPage() {
           .select("id, name, description, price, image_url")
           .eq("home_restaurant_id", restaurantId)
           .order("id", { ascending: false }),
+        supabase
+          .from("reviews")
+          .select("id, rating, comment, created_at")
+          .eq("restaurant_id", restaurantId)
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
       setRestaurant(restaurantData);
       setDishes(dishData || []);
+      setReviews(reviewData || []);
       setLoading(false);
     }
     loadData();
@@ -145,14 +157,16 @@ export default function RestaurantMenuPage() {
   function openDishSheet(dish: Dish) {
     if (!restaurant) return;
     setSelectedDish({
-      id:                 dish.id,
-      name:               dish.name,
-      description:        dish.description,
-      price:              dish.price,
-      image_url:          dish.image_url,
-      restaurant_id:      restaurant.id,
-      restaurant_name:    restaurant.name,
-      restaurant_cuisine: restaurant.cuisine,
+      id:                     dish.id,
+      name:                   dish.name,
+      description:            dish.description,
+      price:                  dish.price,
+      image_url:              dish.image_url,
+      restaurant_id:          restaurant.id,
+      restaurant_name:        restaurant.name,
+      restaurant_cuisine:     restaurant.cuisine,
+      restaurant_avg_rating:  avgRating ?? undefined,
+      restaurant_review_count: reviewCount,
     });
   }
 
@@ -281,11 +295,16 @@ export default function RestaurantMenuPage() {
                 <span className="flex items-center gap-1 font-semibold" style={{ color: "var(--hb-primary)" }}>
                   <ChefHat size={12} /> {restaurant.cuisine}
                 </span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <Star size={12} fill="#FFB400" stroke="#FFB400" />
-                  <b style={{ color: "var(--hb-fg)" }}>4.9</b> (312)
-                </span>
+                {avgRating != null && reviewCount > 0 && (
+                  <>
+                    <span>·</span>
+                    <span className="flex items-center gap-1">
+                      <Star size={12} fill="#FFB400" stroke="#FFB400" />
+                      <b style={{ color: "var(--hb-fg)" }}>{avgRating.toFixed(1)}</b>
+                      <span style={{ color: "var(--hb-fg-muted)" }}>({reviewCount} {reviewCount === 1 ? "review" : "reviews"})</span>
+                    </span>
+                  </>
+                )}
                 <span>·</span>
                 <span className="flex items-center gap-1">
                   <MapPin size={11} /> {restaurant.city}
@@ -455,6 +474,50 @@ export default function RestaurantMenuPage() {
         )}
       </section>
 
+      {/* ── Reviews section ──────────────────────────────────────────────── */}
+      <section className="max-w-[1100px] mx-auto px-4 lg:px-8 pb-8">
+        <h2
+          className="font-bold text-[18px] lg:text-[24px] tracking-[-0.02em] mb-4"
+          style={{ fontFamily: "var(--font-display)", color: "var(--hb-fg)" }}
+        >
+          What customers say
+        </h2>
+        {reviews.length === 0 ? (
+          <p className="text-[14px]" style={{ color: "var(--hb-fg-muted)" }}>
+            Be the first to review this restaurant!
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {reviews.slice(0, 5).map((rev) => (
+              <div
+                key={rev.id}
+                className="bg-white rounded-2xl p-4"
+                style={{ border: "1px solid var(--hb-border-soft)", boxShadow: "var(--hb-shadow-soft)" }}
+              >
+                <div className="flex items-center gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={14}
+                      fill={s <= rev.rating ? "#FFB400" : "none"}
+                      stroke={s <= rev.rating ? "#FFB400" : "#D1D5DB"}
+                    />
+                  ))}
+                </div>
+                {rev.comment && (
+                  <p className="text-[13px] leading-[1.6] mb-1.5" style={{ color: "var(--hb-fg)" }}>
+                    "{rev.comment}"
+                  </p>
+                )}
+                <p className="text-[11px]" style={{ color: "var(--hb-fg-muted)" }}>
+                  — Customer · {new Date(rev.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* ── Floating cart bar — mobile ────────────────────────────────────── */}
       {mounted && cartCount > 0 && !cartBarDismissed && (
         <div
@@ -499,7 +562,7 @@ export default function RestaurantMenuPage() {
         {[
           { label: "Home",    Icon: House,   href: "/dashboard/customer" },
           { label: "Search",  Icon: Search,  href: "#"                   },
-          { label: "Orders",  Icon: Package, href: "/dashboard/customer" },
+          { label: "Orders",  Icon: Package, href: "/dashboard/customer/orders" },
           { label: "Account", Icon: User,    href: "/login"              },
         ].map(({ label, Icon, href }) => (
           <button

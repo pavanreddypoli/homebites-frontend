@@ -4,10 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
-import { CheckCircle2, Store, Clock, Receipt, Copy, Check } from "lucide-react";
+import { CheckCircle2, Store, Clock, Receipt, Copy, Check, Star } from "lucide-react";
 
 type Order = {
   id: string;
+  restaurant_id: string;
   restaurant_name: string;
   order_type: string;
   subtotal: number;
@@ -16,6 +17,7 @@ type Order = {
   total: number;
   created_at: string;
   status: string;
+  customer_email?: string;
 };
 
 type OrderItem = {
@@ -57,6 +59,14 @@ export default function OrderConfirmationPage() {
   const [copied, setCopied] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Review state
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [existingReview, setExistingReview] = useState<{ rating: number; comment?: string | null } | null>(null);
+
   const confettiPieces = useRef(
     Array.from({ length: 32 }, (_, i) => ({
       id: i,
@@ -93,6 +103,16 @@ export default function OrderConfirmationPage() {
         document.title = "🎉 Order Ready! — HomeBites";
         setTimeout(() => setShowConfetti(false), 4000);
       }
+
+      // Check for existing review
+      if (loadedOrder?.id) {
+        const { data: reviewData } = await supabase
+          .from("reviews")
+          .select("rating, comment")
+          .eq("order_id", loadedOrder.id)
+          .maybeSingle();
+        if (reviewData) setExistingReview(reviewData);
+      }
     }
 
     loadOrder();
@@ -128,6 +148,21 @@ export default function OrderConfirmationPage() {
 
   if (!order) {
     return <Shell><Centered text="Order not found." /></Shell>;
+  }
+
+  async function handleSubmitReview() {
+    if (!selectedRating || !order) return;
+    setReviewSubmitting(true);
+    await supabase.from("reviews").insert({
+      order_id:      order.id,
+      restaurant_id: order.restaurant_id,
+      customer_email: order.customer_email ?? "guest",
+      rating:  selectedRating,
+      comment: reviewComment.trim() || null,
+    });
+    setReviewSubmitting(false);
+    setReviewSubmitted(true);
+    setExistingReview({ rating: selectedRating, comment: reviewComment.trim() || null });
   }
 
   const shortId = order.id.slice(0, 8).toUpperCase();
@@ -352,6 +387,86 @@ export default function OrderConfirmationPage() {
             <span style={{ fontVariantNumeric: "tabular-nums" }}>${order.total.toFixed(2)}</span>
           </div>
         </Card>
+
+        {/* Review card — shown when order is ready or completed */}
+        {(order.status === "ready" || order.status === "completed") && (
+          <div
+            className="mt-4 bg-white rounded-2xl p-5"
+            style={{ border: "1px solid #EDE3D2", boxShadow: "var(--hb-shadow-soft)" }}
+          >
+            {existingReview ? (
+              <div>
+                <h3 className="text-[16px] font-semibold mb-2" style={{ color: "var(--hb-fg)" }}>
+                  Your review
+                </h3>
+                <div className="flex gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={22}
+                      fill={s <= existingReview.rating ? "#FFB400" : "none"}
+                      stroke={s <= existingReview.rating ? "#FFB400" : "#D1D5DB"}
+                    />
+                  ))}
+                </div>
+                {existingReview.comment && (
+                  <p className="text-[13px] leading-[1.55]" style={{ color: "var(--hb-fg-muted)" }}>
+                    "{existingReview.comment}"
+                  </p>
+                )}
+              </div>
+            ) : reviewSubmitted ? (
+              <p className="text-[15px] font-semibold text-center py-2" style={{ color: "var(--hb-fg)" }}>
+                Thanks for your review! 🙏
+              </p>
+            ) : (
+              <div>
+                <h3 className="text-[16px] font-semibold mb-3" style={{ color: "var(--hb-fg)" }}>
+                  How was your order?
+                </h3>
+                <div
+                  className="flex gap-2 mb-4"
+                  onMouseLeave={() => setHoveredRating(0)}
+                >
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedRating(s)}
+                      onMouseEnter={() => setHoveredRating(s)}
+                      className="p-0.5 transition-transform hover:scale-110"
+                    >
+                      <Star
+                        size={32}
+                        fill={(hoveredRating || selectedRating) >= s ? "#FFB400" : "none"}
+                        stroke={(hoveredRating || selectedRating) >= s ? "#FFB400" : "#D1D5DB"}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Tell us more (optional)"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl text-[13px] outline-none resize-none mb-3"
+                  style={{
+                    background: "#FBF7F1",
+                    border: "1px solid #EDE3D2",
+                    color: "var(--hb-fg)",
+                  }}
+                />
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={!selectedRating || reviewSubmitting}
+                  className="w-full py-3 rounded-full font-bold text-[14px] text-white disabled:opacity-50"
+                  style={{ background: "var(--hb-primary)" }}
+                >
+                  {reviewSubmitting ? "Submitting…" : "Submit Review"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <button
           className="w-full mt-6 py-3.5 rounded-full font-bold text-[15px] text-white transition-colors"
