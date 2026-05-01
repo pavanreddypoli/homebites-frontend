@@ -117,6 +117,7 @@ export default function DishDetailSheet({ dish, onClose }: Props) {
   const totalStr  = (dish.price * qty).toFixed(2);
 
   function handleShare() {
+    if (!dish) return;
     const url = `${window.location.origin}/dashboard/customer/restaurant/${dish.restaurant_id}`;
     if (navigator.share) {
       navigator.share({ title: dish.name, url }).catch(() => {});
