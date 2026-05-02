@@ -374,9 +374,9 @@ export default function OrderConfirmationPage() {
           <hr className="my-4" style={{ borderColor: "var(--hb-border-soft)" }} />
 
           <div className="space-y-1.5 text-[13px]" style={{ color: "var(--hb-fg-muted)" }}>
-            <Row label="Subtotal" value={`$${order.subtotal.toFixed(2)}`} />
-            <Row label="Service fee" value={`$${order.service_fee.toFixed(2)}`} />
-            <Row label="Tax" value={`$${order.tax.toFixed(2)}`} />
+            <Row label="Subtotal" value={`$${(order.subtotal ?? 0).toFixed(2)}`} />
+            <Row label="Service fee" value={`$${(order.service_fee ?? 0).toFixed(2)}`} />
+            <Row label="Tax" value={`$${(order.tax ?? 0).toFixed(2)}`} />
           </div>
 
           <div
@@ -384,7 +384,7 @@ export default function OrderConfirmationPage() {
             style={{ color: "var(--hb-fg)", borderTop: "1px solid var(--hb-border-soft)" }}
           >
             <span style={{ fontFamily: "var(--font-display)" }}>Total paid</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>${order.total.toFixed(2)}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>${(order.total ?? 0).toFixed(2)}</span>
           </div>
         </Card>
 

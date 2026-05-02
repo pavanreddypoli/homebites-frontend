@@ -233,7 +233,7 @@ export default function CustomerOrdersPage() {
                       style={{ borderTop: "1px solid var(--hb-border-soft)" }}
                     >
                       <span className="text-[15px] font-bold" style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}>
-                        ${order.total.toFixed(2)}
+                        ${(order.total ?? 0).toFixed(2)}
                       </span>
                       <div className="flex items-center gap-2">
                         <button

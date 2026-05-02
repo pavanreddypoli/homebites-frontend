@@ -1394,7 +1394,7 @@ function DishCard({
             className="text-[11px] font-bold"
             style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}
           >
-            ${d.price.toFixed(2)}
+            ${(d.price ?? 0).toFixed(2)}
           </span>
           <span className="text-[10px]" style={{ color: "var(--hb-fg-subtle)" }}>· 25 min</span>
         </div>
@@ -1405,7 +1405,7 @@ function DishCard({
             className="text-[14px] font-bold"
             style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}
           >
-            ${d.price.toFixed(2)}
+            ${(d.price ?? 0).toFixed(2)}
           </p>
           {d.distance_km != null && (
             <p className="text-[11px]" style={{ color: "var(--hb-fg-subtle)" }}>

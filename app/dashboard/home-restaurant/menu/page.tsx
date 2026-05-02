@@ -237,9 +237,9 @@ export default function MyMenuItems() {
                       {dish.description}
                     </p>
                   )}
-                  {dish.price !== undefined && (
+                  {dish.price != null && (
                     <p className="text-[13px] font-bold mt-1.5" style={{ color: "var(--hb-fg)" }}>
-                      ${dish.price.toFixed(2)}
+                      ${(dish.price ?? 0).toFixed(2)}
                     </p>
                   )}
 

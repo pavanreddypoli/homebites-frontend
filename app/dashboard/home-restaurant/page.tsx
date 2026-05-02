@@ -222,7 +222,7 @@ export default function HomeRestaurantDashboard() {
                   className="text-[42px] font-bold leading-none"
                   style={{ color: "var(--hb-primary)", fontFamily: "var(--font-display)" }}
                 >
-                  {avgRating!.toFixed(1)}
+                  {(avgRating ?? 0).toFixed(1)}
                 </span>
                 <div>
                   <div className="flex gap-0.5 mb-0.5">
