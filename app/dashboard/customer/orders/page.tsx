@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
 import { clearCart, saveCart } from "@/lib/cart";
@@ -35,6 +35,7 @@ const STATUS: Record<string, { bg: string; color: string; label: string }> = {
 
 export default function CustomerOrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [searchedEmail, setSearchedEmail] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -43,16 +44,22 @@ export default function CustomerOrdersPage() {
   const [searched, setSearched] = useState(false);
   const [reorderingId, setReorderingId] = useState<string | null>(null);
 
-  // Auto-load for logged-in users
+  // Auto-load: URL ?email= param (from /foodies redirect) takes priority over auth user
   useEffect(() => {
-    async function checkLoggedIn() {
+    async function init() {
+      const urlEmail = searchParams.get("email");
+      if (urlEmail) {
+        setEmail(urlEmail);
+        doSearch(urlEmail);
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setEmail(user.email);
-        await doSearch(user.email);
+        doSearch(user.email);
       }
     }
-    checkLoggedIn();
+    init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
