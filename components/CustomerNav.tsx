@@ -141,14 +141,14 @@ export default function CustomerNav({
                   className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
-                  Foodies
+                  Foodies Sign In
                 </button>
                 <button
                   onClick={() => router.push("/biterunners")}
                   className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
-                  BiteRunners
+                  Join BiteRunners
                 </button>
               </div>
             </div>
@@ -198,14 +198,14 @@ export default function CustomerNav({
                   className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
-                  Foodies
+                  Foodies Sign In
                 </button>
                 <button
                   onClick={() => router.push("/biterunners")}
                   className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
-                  BiteRunners
+                  Join BiteRunners
                 </button>
               </div>
             </div>
