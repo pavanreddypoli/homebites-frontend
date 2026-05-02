@@ -501,7 +501,7 @@ export default function CustomerDashboard() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
-        className="relative overflow-hidden pt-20 lg:pt-24 pb-10 lg:pb-20 px-4 lg:px-8"
+        className="relative overflow-hidden pt-24 lg:pt-28 pb-10 lg:pb-20 px-4 lg:px-8"
         style={{
           background: "linear-gradient(180deg, var(--hb-bg) 0%, var(--hb-bg-warm) 100%)",
         }}
@@ -580,7 +580,7 @@ export default function CustomerDashboard() {
               </button>
 
               {/* Inline location action buttons — always visible */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 pb-1">
+              <div className="flex flex-row gap-2 pt-3 pb-1">
                 <Button
                   variant="outline"
                   size="sm"

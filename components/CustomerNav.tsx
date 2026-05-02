@@ -46,7 +46,7 @@ export default function CustomerNav({
         borderBottom: "1px solid var(--hb-border-soft)",
       }}
     >
-      <div className="h-14 lg:h-16 px-4 lg:px-8 flex items-center gap-2 lg:gap-4 max-w-[1400px] mx-auto">
+      <div className="min-h-14 lg:min-h-16 py-2 px-4 lg:px-8 flex items-center gap-2 lg:gap-4 max-w-[1400px] mx-auto">
         {/* Logo + wordmark */}
         <button
           onClick={() => router.push("/dashboard/customer")}
@@ -118,22 +118,40 @@ export default function CustomerNav({
               </button>
             </>
           ) : (
-            <>
-              <button
-                onClick={() => router.push("/login")}
-                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
-                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
-              >
-                Home Restaurant Login
-              </button>
-              <button
-                onClick={() => router.push("/signup")}
-                className="hidden lg:block px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
-                style={{ background: "#FF7A39" }}
-              >
-                Become a Home Restaurant
-              </button>
-            </>
+            <div className="hidden lg:flex flex-col items-end gap-1.5">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => router.push("/login")}
+                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  Home Restaurant Login
+                </button>
+                <button
+                  onClick={() => router.push("/signup")}
+                  className="px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
+                  style={{ background: "#FF7A39" }}
+                >
+                  Become a Home Restaurant
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => router.push("/foodies")}
+                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  Foodies
+                </button>
+                <button
+                  onClick={() => router.push("/biterunners")}
+                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  BiteRunners
+                </button>
+              </div>
+            </div>
           )
         )}
 
@@ -157,22 +175,40 @@ export default function CustomerNav({
               </button>
             </>
           ) : (
-            <>
-              <button
-                onClick={() => router.push("/login")}
-                className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
-                style={{ color: "#16202B", border: "1.5px solid #16202B" }}
-              >
-                Home Restaurant Login
-              </button>
-              <button
-                onClick={() => router.push("/signup")}
-                className="lg:hidden px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
-                style={{ background: "#FF7A39" }}
-              >
-                Become a Home Restaurant
-              </button>
-            </>
+            <div className="lg:hidden flex flex-col items-end gap-1">
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => router.push("/login")}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  Home Restaurant Login
+                </button>
+                <button
+                  onClick={() => router.push("/signup")}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
+                  style={{ background: "#FF7A39" }}
+                >
+                  Become a Home Restaurant
+                </button>
+              </div>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => router.push("/foodies")}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  Foodies
+                </button>
+                <button
+                  onClick={() => router.push("/biterunners")}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
+                >
+                  BiteRunners
+                </button>
+              </div>
+            </div>
           )
         )}
 
