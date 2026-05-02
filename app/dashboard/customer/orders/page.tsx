@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
@@ -33,7 +33,15 @@ const STATUS: Record<string, { bg: string; color: string; label: string }> = {
   completed: { bg: "#DCFCE7", color: "#15803D", label: "Completed"      },
 };
 
-export default function CustomerOrdersPage() {
+export default function OrdersPage() {
+  return (
+    <Suspense>
+      <CustomerOrdersPage />
+    </Suspense>
+  );
+}
+
+function CustomerOrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
