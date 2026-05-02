@@ -330,7 +330,8 @@ export default function CustomerDashboard() {
           .eq("is_active", true),
         supabase
           .from("dishes")
-          .select("id, name, description, price, home_restaurant_id, image_url"),
+          .select("id, name, description, price, home_restaurant_id, image_url")
+          .eq("is_archived", false),
         supabase
           .from("reviews")
           .select("restaurant_id, rating"),

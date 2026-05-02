@@ -123,7 +123,8 @@ export default function HomeRestaurantOnboarding() {
         const { data: existingDishes } = await supabase
           .from("dishes")
           .select("id, name, price")
-          .eq("home_restaurant_id", data.id);
+          .eq("home_restaurant_id", data.id)
+          .eq("is_archived", false);
         setDishes(
           (existingDishes ?? []).map((d: any) => ({ id: d.id, name: d.name, price: d.price ?? 0 }))
         );

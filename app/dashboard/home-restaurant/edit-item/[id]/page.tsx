@@ -13,6 +13,7 @@ export default function EditMenuItem() {
   const [ingredients, setIngredients] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [isArchived, setIsArchived] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
@@ -25,9 +26,16 @@ export default function EditMenuItem() {
       setIngredients(data.ingredients ?? "");
       setDescription(data.description ?? "");
       setPrice(data.price?.toString() ?? "");
+      setIsArchived(data.is_archived ?? false);
     }
     if (id) loadDish();
   }, [id]);
+
+  async function handleUnarchive() {
+    const { error } = await supabase.from("dishes").update({ is_archived: false }).eq("id", id);
+    if (error) { setMessage("Unarchive failed: " + error.message); return; }
+    setIsArchived(false);
+  }
 
   async function handleUpdate() {
     setUploading(true);
@@ -75,6 +83,27 @@ export default function EditMenuItem() {
               Edit Dish
             </h1>
           </div>
+
+          {isArchived && (
+            <div
+              className="flex items-start gap-3 px-4 py-3 rounded-xl"
+              style={{ background: "#FFFBEB", border: "1px solid #FCD34D" }}
+            >
+              <span className="text-[16px] leading-none mt-0.5">⚠️</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                  This dish is archived. Customers can&apos;t order it.
+                </p>
+                <button
+                  onClick={handleUnarchive}
+                  className="text-[12px] font-bold underline mt-0.5"
+                  style={{ color: "#D97706" }}
+                >
+                  Unarchive to make it available
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             {[

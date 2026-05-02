@@ -101,6 +101,7 @@ export default function RestaurantMenuPage() {
           .from("dishes")
           .select("id, name, description, price, image_url")
           .eq("home_restaurant_id", restaurantId)
+          .eq("is_archived", false)
           .order("id", { ascending: false }),
         supabase
           .from("reviews")

@@ -44,7 +44,8 @@ export default function HomeRestaurantDashboard() {
       const { count } = await supabase
         .from("dishes")
         .select("id", { count: "exact", head: true })
-        .eq("home_restaurant_id", data.id);
+        .eq("home_restaurant_id", data.id)
+        .eq("is_archived", false);
 
       setDishCount(count ?? 0);
 
