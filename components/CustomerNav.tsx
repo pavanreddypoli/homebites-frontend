@@ -119,33 +119,33 @@ export default function CustomerNav({
             </>
           ) : (
             <div className="hidden lg:flex flex-col items-end gap-1.5">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 w-full">
                 <button
                   onClick={() => router.push("/login")}
-                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  className="w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Home Restaurant Login
                 </button>
                 <button
                   onClick={() => router.push("/signup")}
-                  className="px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
+                  className="w-full px-4 py-1.5 rounded-full text-[13px] font-semibold text-white transition-colors"
                   style={{ background: "#FF7A39" }}
                 >
                   Become a Home Restaurant
                 </button>
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 w-full">
                 <button
                   onClick={() => router.push("/foodies")}
-                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  className="w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Foodies Sign In
                 </button>
                 <button
                   onClick={() => router.push("/biterunners")}
-                  className="px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+                  className="w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Join BiteRunners
@@ -176,33 +176,33 @@ export default function CustomerNav({
             </>
           ) : (
             <div className="lg:hidden flex flex-col items-end gap-1">
-              <div className="flex gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5 w-full">
                 <button
                   onClick={() => router.push("/login")}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  className="w-full px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Home Restaurant Login
                 </button>
                 <button
                   onClick={() => router.push("/signup")}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
+                  className="w-full px-2.5 py-1 rounded-full text-[10px] font-semibold text-white transition-colors whitespace-nowrap"
                   style={{ background: "#FF7A39" }}
                 >
                   Become a Home Restaurant
                 </button>
               </div>
-              <div className="flex gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5 w-full">
                 <button
                   onClick={() => router.push("/foodies")}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  className="w-full px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Foodies Sign In
                 </button>
                 <button
                   onClick={() => router.push("/biterunners")}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
+                  className="w-full px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: "var(--hb-fg-muted)", border: "1px solid var(--hb-border-soft)" }}
                 >
                   Join BiteRunners
