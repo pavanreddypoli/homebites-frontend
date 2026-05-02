@@ -113,6 +113,13 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
         body: JSON.stringify({ orderId, email }),
       }).catch((err) => console.error("notify-order failed:", err));
 
+      // Best-effort chef notification
+      fetch("/api/notify-chef-new-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      }).catch((err) => console.error("notify-chef-new-order failed:", err));
+
       router.push(`/dashboard/customer/order-confirmation/${orderId}`);
     }
   }
