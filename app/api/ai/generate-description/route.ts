@@ -25,33 +25,26 @@ export async function POST(req: NextRequest) {
   if (!token) return new Response("Unauthorized", { status: 401 });
 
   const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token);
-  if (authError || !user) {
-    console.error("[AI] Auth failed:", authError?.message);
-    return new Response("Unauthorized", { status: 401 });
-  }
+  if (authError || !user) return new Response("Unauthorized", { status: 401 });
 
   // 2. Parse body
   let dishName: string, ingredients: string;
   try {
     const body = await req.json();
-    dishName    = (body.dishName    ?? "").trim();
+    dishName   = (body.dishName   ?? "").trim();
     ingredients = (body.ingredients ?? "").trim();
-  } catch (err) {
-    console.error("[AI] Body parse failed:", err);
+  } catch {
     return new Response("Invalid request body", { status: 400 });
   }
   if (!dishName) return new Response("dishName is required", { status: 400 });
 
-  console.log("[AI] Request — dishName:", dishName, "| hasIngredients:", !!ingredients, "| userId:", user.id);
-
   // 3. Fetch chef's cuisine for richer prompt context (home_restaurants.id = auth user id)
-  const { data: restaurant, error: restaurantErr } = await supabaseServer
+  const { data: restaurant } = await supabaseServer
     .from("home_restaurants")
     .select("cuisine")
     .eq("id", user.id)
     .single();
   const cuisine = restaurant?.cuisine ?? "home-cooked";
-  console.log("[AI] Cuisine fetched:", cuisine, "| restaurantErr:", restaurantErr?.message ?? null);
 
   // 4. Rate limit: max DAILY_LIMIT generations per chef per rolling 24 h
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -61,8 +54,6 @@ export async function POST(req: NextRequest) {
     .eq("user_id", user.id)
     .eq("feature", "menu_description")
     .gte("created_at", since);
-
-  console.log("[AI] Rate limit count (last 24h):", count);
 
   if ((count ?? 0) >= DAILY_LIMIT) {
     return new Response(
@@ -80,24 +71,19 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join("\n");
 
-  console.log("[AI] User prompt:\n", userPrompt);
-
-  // 6. Stream from Claude — full dated model ID to avoid alias resolution surprises
+  // 6. Stream from Claude
   // ANTHROPIC_API_KEY must be set in .env.local (dev) and in Vercel env vars (prod/preview)
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-  console.log("[AI] Starting stream — model: claude-haiku-4-5-20251001");
 
   let messageStream: ReturnType<typeof anthropic.messages.stream>;
   try {
     messageStream = anthropic.messages.stream({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: 200,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }],
     });
-  } catch (err) {
-    console.error("[AI] Stream creation failed:", err);
+  } catch {
     return new Response(
       JSON.stringify({ error: "AI is unavailable right now, try again." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
@@ -113,16 +99,13 @@ export async function POST(req: NextRequest) {
   const readable = new ReadableStream({
     async start(controller) {
       let completed = false;
-      let totalChars = 0;
       try {
         for await (const text of capturedStream.textStream) {
-          totalChars += text.length;
           controller.enqueue(encoder.encode(text));
         }
         completed = true;
-        console.log("[AI] Stream done — totalChars:", totalChars);
-      } catch (err) {
-        console.error("[AI] Stream error:", err);
+      } catch {
+        // Client disconnected or Anthropic error — close silently, skip logging
       }
       controller.close();
 
@@ -133,7 +116,6 @@ export async function POST(req: NextRequest) {
           const tokensIn  = final.usage.input_tokens;
           const tokensOut = final.usage.output_tokens;
           const cost_usd  = tokensIn * INPUT_COST_PER_TOKEN + tokensOut * OUTPUT_COST_PER_TOKEN;
-          console.log("[AI] Usage — tokensIn:", tokensIn, "tokensOut:", tokensOut, "cost_usd:", cost_usd);
           await supabaseServer.from("ai_usage_log").insert({
             user_id:    user.id,
             feature:    "menu_description",
@@ -141,8 +123,8 @@ export async function POST(req: NextRequest) {
             tokens_out: tokensOut,
             cost_usd,
           });
-        } catch (err) {
-          console.error("[AI] Usage log failed:", err);
+        } catch {
+          // Logging failure is non-fatal — generation was already delivered
         }
       }
     },
