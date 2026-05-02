@@ -67,6 +67,16 @@ export async function POST(req: Request) {
             </p>
           </div>
 
+          <!-- Live status CTA -->
+          <div style="text-align:center;padding:4px 0 16px 0">
+            <a
+              href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/customer/order-confirmation/${orderId}"
+              style="display:inline-block;background:#FF7A39;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:999px;font-family:Arial,sans-serif"
+            >
+              View live order status →
+            </a>
+          </div>
+
           <!-- Order Details -->
           <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px">
             <h3 style="margin:0 0 12px 0">Order Details</h3>

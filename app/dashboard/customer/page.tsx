@@ -170,6 +170,13 @@ export default function CustomerDashboard() {
   const prevCartCountRef = useRef(0);
   const touchStartYRef = useRef(0);
 
+  // Active order banner
+  const [activeOrder, setActiveOrder] = useState<{
+    id: string;
+    restaurant_name: string;
+    status: string;
+  } | null>(null);
+
   useEffect(() => {
     if (cartCount > prevCartCountRef.current) {
       setCartBarDismissed(false);
@@ -190,6 +197,42 @@ export default function CustomerDashboard() {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
     bumpCart();
   }, []);
+
+  /* ── Active order banner — load ── */
+  useEffect(() => {
+    async function checkActiveOrder() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("orders")
+        .select("id, restaurant_name, status")
+        .eq("customer_id", user.id)
+        .in("status", ["placed", "ready"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setActiveOrder(data);
+    }
+    checkActiveOrder();
+  }, []);
+
+  /* ── Active order banner — realtime ── */
+  useEffect(() => {
+    if (!activeOrder?.id) return;
+    const channel = supabase
+      .channel(`active-order-banner-${activeOrder.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${activeOrder.id}` },
+        (payload) => {
+          const { status } = payload.new as { status: string };
+          if (status === "completed") setActiveOrder(null);
+          else setActiveOrder((prev) => prev ? { ...prev, status } : prev);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeOrder?.id]);
 
   /* ── Restore saved location + radius ── */
   useEffect(() => {
@@ -488,6 +531,26 @@ export default function CustomerDashboard() {
   return (
     <div className="min-h-screen" style={{ background: "var(--hb-bg)" }}>
       <CustomerNav address={locationLabel} />
+
+      {/* Active order banner — logged-in customers with a placed/ready order */}
+      {activeOrder && (
+        <div
+          className="fixed left-0 right-0 top-14 lg:top-16 z-[90] flex items-center justify-between gap-3 px-4 py-2.5 cursor-pointer"
+          style={{ background: "var(--hb-primary)" }}
+          onClick={() => router.push(`/dashboard/customer/order-confirmation/${activeOrder.id}`)}
+        >
+          <div className="flex items-center gap-2 text-white text-[13px] font-semibold min-w-0">
+            <span className="flex-shrink-0">🍽️</span>
+            <span className="truncate">
+              Your order from <b>{activeOrder.restaurant_name}</b> is{" "}
+              {activeOrder.status === "ready" ? "ready for pickup" : "being prepared"}
+            </span>
+          </div>
+          <span className="text-white text-[12px] font-semibold whitespace-nowrap flex-shrink-0">
+            View status →
+          </span>
+        </div>
+      )}
 
       {/* Location change toast */}
       {locToast && (
