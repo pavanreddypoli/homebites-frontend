@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     // 4️⃣ Send email
     await resend.emails.send({
-      from: "HomeBites <onboarding@resend.dev>",
+      from: "HomeBites <orders@homebitesai.com>",
       to: email,
       subject: "🎉 Your HomeBites order is confirmed",
       html: `
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
             </table>
             <hr style="margin:12px 0"/>
             <p style="text-align:right;font-weight:600">
-              Total: $${order.total.toFixed(2)}
+              Total: $${(order.total ?? 0).toFixed(2)}
             </p>
           </div>
 

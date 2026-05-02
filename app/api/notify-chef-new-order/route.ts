@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     // 4) Send email
     await resend.emails.send({
-      from: "HomeBites <onboarding@resend.dev>",
+      from: "HomeBites <orders@homebitesai.com>",
       to: hr.notification_email,
       subject: `📦 New HomeBites Order #${String(order.id).slice(0, 8)}`,
       html: `

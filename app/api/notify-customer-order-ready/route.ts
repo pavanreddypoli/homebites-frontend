@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       .join("");
 
     await resend.emails.send({
-      from: "HomeBites <onboarding@resend.dev>",
+      from: "HomeBites <orders@homebitesai.com>",
       to: order.customer_email,
       subject: `✅ Your order is ready for pickup (#${String(order.id).slice(0, 8)})`,
       html: `
