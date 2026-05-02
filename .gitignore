@@ -42,3 +42,7 @@ next-env.d.ts
 
 # one-time data scripts — not part of the app
 scripts/diversify-seed-images.ts
+
+# Environment variables
+.env.local
+.env*.local
