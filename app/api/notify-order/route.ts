@@ -114,7 +114,7 @@ export async function POST(req: Request) {
           <!-- Footer -->
           <div style="text-align:center;margin-top:24px">
             <a
-              href="https://homebites.com"
+              href="https://homebitesai.com"
               style="color:#2563eb;text-decoration:none;font-weight:600"
             >
               Visit HomeBites

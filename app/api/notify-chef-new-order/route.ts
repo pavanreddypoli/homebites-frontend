@@ -83,7 +83,7 @@ export async function POST(req: Request) {
             </div>
 
             <div style="text-align:center;margin-top:24px">
-              <a href="https://homebites.com" style="color:#2563eb;text-decoration:none;font-weight:700">
+              <a href="https://homebitesai.com" style="color:#2563eb;text-decoration:none;font-weight:700">
                 Open HomeBites
               </a>
             </div>
