@@ -84,7 +84,7 @@ export async function POST(req: Request) {
 
             <div style="text-align:center;margin-top:24px">
               <a href="https://homebitesai.com" style="color:#2563eb;text-decoration:none;font-weight:700">
-                Open HomeBites
+                Visit HomeBites AI
               </a>
             </div>
 
