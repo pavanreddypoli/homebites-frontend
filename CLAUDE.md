@@ -5,7 +5,23 @@
 ```
 homebites-frontend/   ← All active code lives here
 homebites-backend/    ← Empty (no separate backend server)
-docs/                 ← Schema and roadmap
+docs/
+  schema.md           ← DB schema reference
+  roadmap.md          ← Sprint roadmap
+  legal/
+    01-chef-agreement.md
+    02-customer-terms-of-service.md
+    03-privacy-policy.md
+    04-onboarding-compliance-spec.md
+    05-dish-label-generator-spec.md
+    06-pre-launch-legal-checklist.md
+    07-incident-response-playbook.md
+    08-content-moderation-spec.md
+    09-platform-liability-positioning-memo.md
+    10-chef-requirements-guide.md
+    11-master-action-items.md
+    12-marketplace-compliance-comparison.md
+    13-entity-structure-memo.md
 ```
 
 Everything — auth, database, storage, and server-side logic — runs through Supabase and Next.js API routes. There is no separate backend process.
@@ -187,6 +203,22 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 1. Read CLAUDE.md fully
 2. Tell Pavan: "Ready to continue. Weeks 1-6 are complete. Next priority is Week 7: AI search (Anthropic API) and AI menu description writer."
 3. Ask Pavan: "Which do you want to start with today?"
+
+## Legal Entity
+
+**RedCube Group LLC (Texas LLC) d/b/a HomeBites AI.** All contracts, agreements, and legal documents reference "RedCube Group LLC d/b/a HomeBites AI". Consumer-facing copy (UI, emails, marketing) uses "HomeBites AI". See `docs/legal/13-entity-structure-memo.md` for the full entity structure and rationale.
+
+## Compliance Architecture
+
+The platform enforces **Texas Cottage Food Law (SB 541)** compliance via:
+- **DB activation trigger** — `home_restaurants.is_active` only flips true after all compliance gates pass
+- **7-step onboarding wizard** — collects cottage food permit, allergen certs, product type declarations, annual revenue tracking, and chef agreement signature
+- **3-layer content moderation** — automated keyword filter → AI review → human escalation
+- **Auto-generated label PDFs** — per Texas labeling requirements, generated on dish save
+- **Daily cert expiration cron** — warns chefs 30/7/1 days before permit expiry; auto-deactivates on expiry
+- **`compliance_audit_log` table** — append-only log of every compliance state change with actor, timestamp, and reason
+
+Full spec: `docs/legal/04-onboarding-compliance-spec.md`
 
 ## Git Rules
 
