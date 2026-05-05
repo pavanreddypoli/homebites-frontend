@@ -96,7 +96,7 @@ Applied migration `20260504000000_compliance_foundation.sql`:
 
 ---
 
-### ⬜ Session 1.5 — Existing Data Cleanup (PLANNED)
+### ✅ Session 1.5 — Existing Data Cleanup (DONE 2026-05-05)
 
 **Prerequisite:** Strategy decision with Pavan before any migration is written.
 

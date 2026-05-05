@@ -141,8 +141,7 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - **Navbar z-index:** Customer browse navbar uses `z-[100]`; checkout and order-confirmation pages use a `sticky top-0 z-[100]` header. CartDrawer sits at `z-50`, so pages always render above it. Do not lower these z-index values.
 - **Guest-first platform:** HomeBites is designed for guest checkout. Login is optional and only needed for order history. Customers browse and pay without an account. The checkout page collects first name, last name, email, and phone — no login gate. Navbar shows only "Become a Chef" for guests; logged-in users see their email + Logout.
 - **Stripe payments — IN PROGRESS (Week 2):** `STRIPE_WEBHOOK_SECRET` in `.env.local` is a placeholder; replace it with the real secret from the Stripe dashboard after running `stripe listen`. The webhook at `/api/stripe-webhook` logs `payment_intent.succeeded` but does not yet create orders — orders are created client-side immediately after `stripe.confirmPayment` succeeds. Async payment methods (bank transfers, etc.) that trigger a redirect will drop the user to `/dashboard/customer` without an order being created; card payments are unaffected.
-- **`is_active` defaults to `true` — DANGEROUS with activation trigger installed.** Any `INSERT` into `home_restaurants` that omits `is_active` will immediately fail `trg_check_activation`'s first check (`food_handler_cert_url is missing`). All application INSERTs must explicitly set `is_active = false`. Fix: `ALTER TABLE home_restaurants ALTER COLUMN is_active SET DEFAULT false` — tracked in Session 1.5 migration.
-- **Existing data cleanup required (Session 1.5).** As of 2026-05-04: 29 rows in `home_restaurants`, 27 with `is_active = true` and all compliance columns NULL. These predate the activation trigger and would fail all compliance checks if reactivated. Must be audited and categorized (seed data vs. real users) before the Session 2 onboarding wizard goes live. Strategy to be decided; see `docs/roadmap.md` Session 1.5.
+- **All 29 existing `home_restaurants` rows are test data** — tagged `is_test_data = true` by migration `20260504120000`. Customer-facing queries filter these out. No real chefs yet. First real chef will have `is_test_data = false` (the new default).
 - **RLS on `dishes` does not yet enforce `moderation_status`.** The Session 1 migration adds the `moderation_status` column and a check constraint but does not update the existing `dishes` SELECT RLS policy. Customer-facing dish queries filter `moderation_status IN ('approved', 'auto_approved')` only at the application layer — not enforced by RLS. A new RLS policy must be added (Session 1.5) so direct API calls also respect moderation status.
 
 ## Editing Guidelines
@@ -215,15 +214,21 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Trigger test file: `supabase/tests/test_activation_trigger.sql` — 18 tests, all passed
 - `docs/schema.md` updated with all new tables, columns, triggers, Known Schema Issues
 
-#### ⬜ Session 1.5 — Existing data cleanup (PLANNED — strategy chat first)
-- See `docs/roadmap.md` for scope. Do not start until cleanup strategy is decided with Pavan.
+#### ✅ Session 1.5 — Existing data cleanup (DONE 2026-05-05)
+- Migration `20260504120000_session_1_5_schema_fixes.sql` applied — all 4 verification checks passed
+- `is_test_data boolean` column added; all 29 existing rows tagged `true`
+- `is_active` default changed from `true` to `false`
+- `created_at` type fixed from `timestamp` to `timestamptz`
+- Partial index `home_restaurants_active_real_idx` created
+- Customer browse page and restaurant detail page updated to filter `is_test_data = false`
+- Customer dashboard now shows zero restaurants (correct — no real chefs onboarded yet)
 
 #### ⬜ Session 2 — Onboarding wizard UI + API routes (NOT STARTED)
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Session 1 (DB foundation) is complete and all tests passed. Next is Session 1.5: existing data cleanup strategy — we need to decide the approach before writing any migration. Week 7 AI features are also waiting."
-3. Ask Pavan: "Do you want to plan the Session 1.5 cleanup strategy, or switch to Week 7 AI features?"
+2. Tell Pavan: "Ready to continue. Sessions 1 and 1.5 (DB foundation + schema fixes) are complete and verified in production. Customer dashboard correctly shows zero restaurants. Next choices: Session 2 (onboarding wizard UI + API routes) or Week 7 AI features."
+3. Ask Pavan: "Which do you want to start with — Session 2 onboarding wizard, or Week 7 AI features?"
 
 ## Legal Entity
 

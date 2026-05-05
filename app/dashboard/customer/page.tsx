@@ -370,7 +370,8 @@ export default function CustomerDashboard() {
         supabase
           .from("home_restaurants")
           .select("id, name, cuisine, description, city, lat, lng, delivery_radius_km, is_open, closed_message")
-          .eq("is_active", true),
+          .eq("is_active", true)
+          .eq("is_test_data", false),
         supabase
           .from("dishes")
           .select("id, name, description, price, home_restaurant_id, image_url")

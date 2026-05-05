@@ -26,9 +26,10 @@ Represents a home chef's restaurant profile. One row per `home_restaurant` user.
 | `lng` | `float8` | Longitude from Nominatim geocoding |
 | `delivery_radius_km` | `float8` | Max distance for customer discovery (default 5) |
 | `notification_email` | `text` | Chef's email for new-order and pickup alerts |
-| `is_active` | `boolean` | `true` = restaurant visible to customers. **Protected by activation trigger** — see Triggers section. |
+| `is_active` | `boolean` | `true` = restaurant visible to customers. Default `false`. **Protected by activation trigger** — see Triggers section. |
 | `is_open` | `boolean` | Real-time availability toggle — customers see this status live |
 | `closed_message` | `text` | Optional message shown when `is_open = false` |
+| `is_test_data` | `boolean` | `true` = seed/test fixture, excluded from all customer-facing queries. Default `false` (real chefs). All 29 rows existing before migration `20260504120000` are `true`. Added migration `20260504120000`. |
 
 #### Compliance columns (added migration 20260504000000)
 
@@ -49,6 +50,8 @@ Represents a home chef's restaurant profile. One row per `home_restaurant` user.
 | `suspension_reason` | `text` | Human-readable reason (e.g. `'food_handler_cert_expired'`) |
 
 **RLS:** Owners can read/write their own row. Customers can read rows where `is_active = true`.
+
+**Customer-facing queries must filter `is_test_data = false`.** All application queries that surface restaurants to customers must include `.eq("is_active", true).eq("is_test_data", false)`. The partial index `home_restaurants_active_real_idx` covers both conditions. Until a DB-layer RLS policy is added enforcing this, the application code is the security boundary.
 
 **Activation trigger:** `is_active` cannot be set to `true` unless all 8 compliance conditions pass — see `trg_check_activation` in the Triggers section.
 
@@ -296,8 +299,6 @@ Pre-existing data integrity gaps confirmed by inspecting the live DB (2026-05-04
 |---|---|
 | `user_id` column exists, NOT NULL, no default | Not documented in schema.md. Type: `uuid`. No FK to `auth.users` — any UUID is accepted. The application sets this at signup but the DB does not enforce it. |
 | `id` has NO FK to `auth.users` | schema.md previously stated `id` was an FK to `auth.users(id) ON DELETE CASCADE`. Query B returned zero FKs on `home_restaurants`. The relationship is enforced only at the application layer. |
-| `is_active` defaults to `true` | ⚠️ Dangerous with the new activation trigger. Any INSERT that omits `is_active` will attempt activation and fail with the first trigger exception. All existing application INSERTs must explicitly set `is_active = false`. Audit codebase before next deploy. |
-| `created_at` is `timestamp without time zone` | Should be `timestamptz`. Timestamps stored without timezone info — ambiguous across DST changes. Low urgency but technically incorrect. |
 | `delivery_radius_km` is `integer` | schema.md listed `float8`. Currently stored as integer — fractional km values would be silently truncated on INSERT. |
 
 ### `orders` — missing FK and wrong column type
@@ -318,7 +319,7 @@ Pre-existing data integrity gaps confirmed by inspecting the live DB (2026-05-04
 
 | Table | SELECT | INSERT | UPDATE | DELETE |
 |---|---|---|---|---|
-| `home_restaurants` | Owners (own row) + anon (active only) | Owners | Owners (gated by activation trigger) | — |
+| `home_restaurants` | Owners (own row) + anon (active + non-test only — app-layer filter until RLS enforces `is_test_data`) | Owners | Owners (gated by activation trigger) | — |
 | `dishes` | All (non-archived, moderated) | Owners | Owners | Owners (soft-delete only) |
 | `orders` | Owner + customer via RPC | Via RPC | Owner (status updates) | — |
 | `order_items` | Owner + customer via RPC | Via RPC | — | — |
