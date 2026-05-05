@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+const isProd = process.env.VERCEL_ENV === "production";
+
+function dbErrResponse(label: string, err: unknown, status: number) {
+  const e = err as { message?: string; code?: string; hint?: string; details?: string };
+  console.error(`[log-customer-acceptance] ${label}:`, JSON.stringify(e));
+  return NextResponse.json(
+    {
+      error: label,
+      ...(!isProd && {
+        details: e?.message,
+        code: e?.code,
+        hint: e?.hint,
+        pg_details: e?.details,
+      }),
+    },
+    { status }
+  );
+}
+
 export async function POST(req: NextRequest) {
   let body: { user_id?: string; doc_types?: string[] };
   try {
@@ -34,8 +53,7 @@ export async function POST(req: NextRequest) {
   console.log("[log-customer-acceptance] liveDocs:", JSON.stringify(liveDocs), "liveError:", JSON.stringify(liveError));
 
   if (liveError || !liveDocs || liveDocs.length === 0) {
-    console.log("[log-customer-acceptance] early return: no live docs found");
-    return NextResponse.json({ error: "Could not fetch live documents" }, { status: 500 });
+    return dbErrResponse("Could not fetch live documents", liveError ?? { message: "no rows" }, 500);
   }
 
   // Idempotency — check which (doc_type, version) pairs are already recorded
@@ -79,8 +97,7 @@ export async function POST(req: NextRequest) {
     .insert(rows);
 
   if (insertError) {
-    console.error("[log-customer-acceptance] insert error:", JSON.stringify(insertError));
-    return NextResponse.json({ error: "Failed to record acceptance" }, { status: 500 });
+    return dbErrResponse("Failed to record acceptance", insertError, 500);
   }
 
   console.log("[log-customer-acceptance] success, rows inserted:", rows.length);
