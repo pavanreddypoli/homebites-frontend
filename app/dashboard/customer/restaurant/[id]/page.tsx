@@ -96,6 +96,8 @@ export default function RestaurantMenuPage() {
           .from("home_restaurants")
           .select("id, name, cuisine, description, city, is_open, closed_message")
           .eq("id", restaurantId)
+          .eq("is_active", true)
+          .eq("is_test_data", false)
           .single(),
         supabase
           .from("dishes")
