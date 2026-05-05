@@ -86,7 +86,7 @@ One row per customer order.
 |---|---|---|
 | `id` | `uuid` | Primary key |
 | `customer_id` | `uuid` | FK → `auth.users.id`, nullable (guest orders allowed) |
-| `restaurant_id` | `uuid` | FK → `home_restaurants.id` |
+| `restaurant_id` | `text` | ⚠️ Actual DB type is `text`, not `uuid`. No FK constraint to `home_restaurants.id`. See Known Schema Issues below. |
 | `restaurant_name` | `text` | Denormalized snapshot at time of order |
 | `subtotal` | `numeric` | Sum of `price × quantity` for all items |
 | `service_fee` | `numeric` | 5% of subtotal |
@@ -283,6 +283,22 @@ user_metadata: {
 - `customer` — browses and orders
 - `home_restaurant` — manages restaurant profile, menu, and orders
 - `admin` — access to moderation queue and admin routes. Must be set manually in the Supabase Auth dashboard.
+
+---
+
+## Known Schema Issues
+
+These are pre-existing data integrity gaps that need a dedicated migration and data cleanup. Do not fix inline — each requires careful handling of existing rows.
+
+| Issue | Table | Column | Actual type | Expected type | Risk if left as-is |
+|---|---|---|---|---|---|
+| Missing FK, wrong type | `orders` | `restaurant_id` | `text` | `uuid` FK → `home_restaurants(id)` | No referential integrity — orphaned orders if restaurant deleted. Cascade deletes won't fire. Joining on `restaurant_id` requires implicit cast. |
+
+**Fix plan (future migration):**
+1. Verify all existing `orders.restaurant_id` values are valid UUIDs that exist in `home_restaurants.id`
+2. `ALTER TABLE orders ALTER COLUMN restaurant_id TYPE uuid USING restaurant_id::uuid`
+3. `ALTER TABLE orders ADD CONSTRAINT orders_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES home_restaurants(id)`
+4. Test that `create_order_with_items` RPC still works (it passes `p_restaurant_id uuid`)
 
 ---
 
