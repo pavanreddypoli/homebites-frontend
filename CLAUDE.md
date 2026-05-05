@@ -231,12 +231,29 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Global footer added to root layout: Terms · Privacy · Chef Agreement · © RedCube Group LLC
 - Seed script: `npm run seed:legal` (tsx-based, idempotent)
 
-#### ⬜ Session 3 — Onboarding wizard UI + API routes (NOT STARTED)
+#### ⬜ Session 3 — Customer click-through acceptance + re-acceptance modal (NOT STARTED)
+Legal docs are live but don't bind anyone until customers actively accept them at signup/checkout. This closes that gap.
+
+#### ⬜ Session 4 — Chef onboarding wizard steps 1–4: Eligibility / Profile / Cert Upload / Agreement (NOT STARTED)
+
+#### ⬜ Session 5 — Stripe Connect Standard onboarding (NOT STARTED)
+
+#### ⬜ Session 6 — Labeling step + PDF generator (NOT STARTED)
+
+#### ⬜ Session 7 — Customer checkout cottage-food acknowledgment (NOT STARTED)
+
+#### ⬜ Session 8 — Daily cron for expired certs (NOT STARTED)
+
+#### ⬜ Session 9 — Three-layer content moderation system (NOT STARTED)
+
+#### ⬜ Session 10 — Incident response infrastructure (NOT STARTED)
+
+#### ⬜ Session 11 — Public help/legal pages + chef recruitment landing (NOT STARTED)
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, and 2 (DB foundation, schema fixes, legal pages) are complete and live in production. Next is Session 3: onboarding wizard UI + API routes."
-3. Ask Pavan: "Ready to start Session 3 — the 7-step onboarding wizard?"
+2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, and 2 (DB foundation, schema fixes, legal pages) are complete and live in production. Next is Session 3: customer click-through acceptance so the live legal docs actually bind users."
+3. Ask Pavan: "Ready to start Session 3?"
 
 ## Legal Entity
 

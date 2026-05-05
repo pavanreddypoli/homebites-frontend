@@ -125,13 +125,24 @@ Applied migration `20260504000000_compliance_foundation.sql`:
 
 ---
 
-### ⬜ Session 3 — Onboarding Wizard UI + API Routes (NOT STARTED)
+### ⬜ Session 3 — Customer Click-Through Acceptance + Re-Acceptance Modal (NOT STARTED)
 
-**Prerequisite:** Session 1.5 complete (clean DB state, is_active default fixed).
+**Why now:** Legal docs are live at `/legal/terms` etc. but they don't legally bind anyone until customers actively accept them. Click-through is ~1 day's work with enormous legal value.
 
 **Scope:**
 
-1. **7-step onboarding wizard** at `/dashboard/home-restaurant/onboarding`
+1. **Acceptance at signup** — add "I agree to the Terms of Service and Privacy Policy" checkbox to `/signup`. Block form submission if unchecked. On submit, record `terms_accepted_version` and `terms_accepted_at` in user metadata or a dedicated `user_agreements` table.
+2. **Acceptance at checkout** — guest customers never sign up, so also require acceptance at checkout (a single checkbox: "By placing this order, I agree to the Terms of Service and Privacy Policy"). Record alongside the order.
+3. **Version bump re-acceptance modal** — when a new version of the ToS is published (`legal_documents` gets a new live row), logged-in users who accepted an older version see a modal on next visit: "We've updated our Terms. Please review and re-accept to continue." Block navigation until accepted.
+4. **DB schema** — `user_agreements` table: `user_id`, `doc_type`, `version`, `accepted_at`, `ip_address`, `user_agent`. One row per (user, doc_type, version). Read-only after insert (append-only pattern).
+
+---
+
+### ⬜ Session 4 — Chef Onboarding Wizard Steps 1–4 (NOT STARTED)
+
+**Scope:** Eligibility attestation / Profile / Food handler cert upload / Chef Agreement acceptance.
+
+1. **7-step wizard** at `/dashboard/home-restaurant/onboarding`
    - Step 1: Cottage food eligibility attestation (4 yes/no questions, SB 541)
    - Step 2: Food handler cert upload (PDF/image → `chef-credentials` private bucket)
    - Step 3: Product type declaration (`sells_tcs_foods` toggle + DSHS ID if true)
@@ -144,13 +155,39 @@ Applied migration `20260504000000_compliance_foundation.sql`:
    - `POST /api/compliance/cert-upload` — uploads to `chef-credentials`, writes URL + expiry, logs
    - `POST /api/compliance/agree` — writes agreement columns + IP, logs
    - `POST /api/compliance/label-ack` — writes `labeling_acknowledged_at`, logs
-   - `GET/POST /api/stripe-connect/start` — creates Stripe Connect account, redirects to onboarding
-   - `GET /api/stripe-connect/return` — handles return from Stripe, sets `stripe_payouts_enabled`
-3. **Activation flow** — final step calls `UPDATE home_restaurants SET is_active = true` — trigger validates all 8 conditions
 
 ---
 
-### ⬜ Session 3 — Content Moderation (NOT STARTED)
+### ⬜ Session 5 — Stripe Connect Standard Onboarding (NOT STARTED)
+
+1. `GET/POST /api/stripe-connect/start` — creates Stripe Connect account, redirects to onboarding
+2. `GET /api/stripe-connect/return` — handles return from Stripe, sets `stripe_payouts_enabled = true`, logs
+3. Activation flow — wizard final step calls `UPDATE home_restaurants SET is_active = true` — trigger validates all 8 conditions
+
+---
+
+### ⬜ Session 6 — Labeling Step + PDF Generator (NOT STARTED)
+
+See `docs/legal/05-dish-label-generator-spec.md`.
+
+1. Per-dish label PDF generation (Puppeteer or React-PDF) — name, ingredients, allergens, net weight, producer name/address, "Not inspected by DSHS" statement
+2. Wire label generation into dish save flow
+
+---
+
+### ⬜ Session 7 — Customer Checkout Cottage-Food Acknowledgment (NOT STARTED)
+
+Add the required cottage-food disclosure acknowledgment to checkout: "THE FOOD YOU ORDER WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT SUBJECT TO GOVERNMENTAL LICENSING OR INSPECTION." Customer must check a box to proceed.
+
+---
+
+### ⬜ Session 8 — Daily Cron for Expired Certs (NOT STARTED)
+
+`supabase/functions/cert-expiration-cron` — daily Edge Function; warns chefs at 30/7/1 days before expiry; auto-deactivates + suspends on expiry; logs to `compliance_audit_log`.
+
+---
+
+### ⬜ Session 9 — Three-Layer Content Moderation System (NOT STARTED)
 
 See `docs/legal/08-content-moderation-spec.md` for full spec.
 
@@ -158,14 +195,17 @@ See `docs/legal/08-content-moderation-spec.md` for full spec.
 2. `app/api/moderation/classify-dish/route.ts` — Layer 2 Claude Haiku classifier
 3. `app/api/moderation/review/` — approve/reject endpoints for admin
 4. `app/admin/moderation/page.tsx` — manual review queue UI (admin only)
-5. Wire into dish add/edit flow — classify on submit, gate visibility on `moderation_status`
-6. Allergen detection combined with classification call
+5. Wire into dish add/edit flow; allergen detection combined with classification call
 
 ---
 
-### ⬜ Session 4 — Label Generator + Cert Expiration Cron (NOT STARTED)
+### ⬜ Session 10 — Incident Response Infrastructure (NOT STARTED)
 
-See `docs/legal/05-dish-label-generator-spec.md`.
+See `docs/legal/07-incident-response-playbook.md`.
 
-1. Per-dish label PDF generation (Puppeteer or React-PDF) — name, ingredients, allergens, net weight, producer name/address, "Not inspected by DSHS" statement
-2. `supabase/functions/cert-expiration-cron` — daily Edge Function; warns chefs at 30/7/1 days; auto-deactivates + suspends on expiry; logs to `compliance_audit_log`
+---
+
+### ⬜ Session 11 — Public Help/Legal Pages + Chef Recruitment Landing (NOT STARTED)
+
+- `/help/cottage-food` — public explainer for rejected chefs
+- Chef recruitment landing page (replaces the `/legal/chef-agreement` placeholder in the footer "Become a Chef" link)
