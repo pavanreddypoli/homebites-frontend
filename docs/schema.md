@@ -288,13 +288,25 @@ user_metadata: {
 
 ## Known Schema Issues
 
-These are pre-existing data integrity gaps that need a dedicated migration and data cleanup. Do not fix inline — each requires careful handling of existing rows.
+Pre-existing data integrity gaps confirmed by inspecting the live DB (2026-05-04). Do not fix inline — each requires careful handling of existing rows. Flag for a dedicated future migration.
 
-| Issue | Table | Column | Actual type | Expected type | Risk if left as-is |
+### `home_restaurants` — undocumented column and missing referential integrity
+
+| Finding | Detail |
+|---|---|
+| `user_id` column exists, NOT NULL, no default | Not documented in schema.md. Type: `uuid`. No FK to `auth.users` — any UUID is accepted. The application sets this at signup but the DB does not enforce it. |
+| `id` has NO FK to `auth.users` | schema.md previously stated `id` was an FK to `auth.users(id) ON DELETE CASCADE`. Query B returned zero FKs on `home_restaurants`. The relationship is enforced only at the application layer. |
+| `is_active` defaults to `true` | ⚠️ Dangerous with the new activation trigger. Any INSERT that omits `is_active` will attempt activation and fail with the first trigger exception. All existing application INSERTs must explicitly set `is_active = false`. Audit codebase before next deploy. |
+| `created_at` is `timestamp without time zone` | Should be `timestamptz`. Timestamps stored without timezone info — ambiguous across DST changes. Low urgency but technically incorrect. |
+| `delivery_radius_km` is `integer` | schema.md listed `float8`. Currently stored as integer — fractional km values would be silently truncated on INSERT. |
+
+### `orders` — missing FK and wrong column type
+
+| Issue | Table | Column | Actual type | Expected type | Risk |
 |---|---|---|---|---|---|
-| Missing FK, wrong type | `orders` | `restaurant_id` | `text` | `uuid` FK → `home_restaurants(id)` | No referential integrity — orphaned orders if restaurant deleted. Cascade deletes won't fire. Joining on `restaurant_id` requires implicit cast. |
+| Missing FK, wrong type | `orders` | `restaurant_id` | `text` | `uuid` FK → `home_restaurants(id)` | No referential integrity. Orphaned orders if restaurant deleted. Cascade deletes won't fire. Joining requires implicit cast. |
 
-**Fix plan (future migration):**
+**Fix plan for `orders.restaurant_id` (future migration):**
 1. Verify all existing `orders.restaurant_id` values are valid UUIDs that exist in `home_restaurants.id`
 2. `ALTER TABLE orders ALTER COLUMN restaurant_id TYPE uuid USING restaurant_id::uuid`
 3. `ALTER TABLE orders ADD CONSTRAINT orders_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES home_restaurants(id)`

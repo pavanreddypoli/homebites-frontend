@@ -8,33 +8,30 @@
 --          The SQL Editor runs as service role, which is required.
 --
 -- Strategy:
---   Wrapped in a single transaction. The home_restaurants_id_fkey FK is
---   temporarily dropped so we can insert a synthetic test row without needing
---   a matching auth.users entry. SAVEPOINT lets you recover if a mid-test
---   error leaves the test row behind.
+--   Wrapped in a single transaction. user_id is NOT NULL (no FK — any UUID
+--   works). We use the same UUID for both id and user_id. No FK teardown
+--   needed — home_restaurants has no FK constraints to auth.users.
+--   SAVEPOINT lets you recover if a mid-test error leaves the test row behind.
 --
 -- Recovery (if something goes wrong mid-run):
 --   ROLLBACK TO SAVEPOINT sp_tests_start;
 --   DELETE FROM public.home_restaurants
 --     WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
---   ALTER TABLE public.home_restaurants
---     ADD CONSTRAINT home_restaurants_id_fkey
---     FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 --   COMMIT;
 -- =============================================================================
 
 BEGIN;
 
--- ─── Setup: temporarily drop FK, insert test row ─────────────────────────────
--- Drop the FK so no auth.users row is needed for our synthetic UUID.
-ALTER TABLE public.home_restaurants
-  DROP CONSTRAINT IF EXISTS home_restaurants_id_fkey;
+-- ─── Setup: insert test row ───────────────────────────────────────────────────
+-- user_id is NOT NULL with no default — must be supplied. No FK exists on
+-- home_restaurants so any valid UUID works; we reuse the row's own id.
 
 -- SAVEPOINT: if tests leave dirty state, roll back to here.
 SAVEPOINT sp_tests_start;
 
-INSERT INTO public.home_restaurants (id, name, cuisine, is_active)
+INSERT INTO public.home_restaurants (id, user_id, name, cuisine, is_active)
 VALUES (
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'Test Trigger Kitchen',
   'Test',
@@ -59,8 +56,9 @@ $$;
 
 DO $$
 BEGIN
-  INSERT INTO public.home_restaurants (id, name, cuisine, is_active)
+  INSERT INTO public.home_restaurants (id, user_id, name, cuisine, is_active)
   VALUES (
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     'Bad Insert Kitchen',
     'Test',
@@ -428,27 +426,20 @@ $$;
 -- NOTICE: Test 10c PASSED: DELETE correctly blocked: compliance_audit_log is append-only — UPDATE and DELETE are not permitted
 
 
--- ─── Cleanup + FK restore ─────────────────────────────────────────────────────
--- Delete the test chef row first, THEN restore the FK.
--- Order matters: the FK constraint must not be in place while the test row
--- (which has no matching auth.users entry) still exists.
+-- ─── Cleanup ─────────────────────────────────────────────────────────────────
 
 DELETE FROM public.home_restaurants
   WHERE id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
-ALTER TABLE public.home_restaurants
-  ADD CONSTRAINT home_restaurants_id_fkey
-  FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
 DO $$
 BEGIN
-  RAISE NOTICE 'Cleanup complete: test row deleted, home_restaurants_id_fkey restored';
+  RAISE NOTICE 'Cleanup complete: test row deleted';
   RAISE NOTICE 'Note: compliance_audit_log test row (NULL FKs) remains — harmless artifact';
 END;
 $$;
 
 -- Expected:
--- NOTICE: Cleanup complete: test row deleted, home_restaurants_id_fkey restored
+-- NOTICE: Cleanup complete: test row deleted
 -- NOTICE: Note: compliance_audit_log test row (NULL FKs) remains — harmless artifact
 
 COMMIT;
