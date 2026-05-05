@@ -174,6 +174,32 @@ Holds dishes sent to Layer 3 manual review when AI returns `decision: 'review'` 
 
 ---
 
+### `legal_documents` _(added migration 20260505000000)_
+
+Versioned storage for public legal documents. One live version per `doc_type` at a time — `superseded_at IS NULL` = currently live.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | Primary key |
+| `doc_type` | `text` | Constraint: `'chef_agreement'` \| `'terms_of_service'` \| `'privacy_policy'` |
+| `version` | `text` | Semver string e.g. `'1.0.0'` |
+| `content_md` | `text` | Full document text in Markdown |
+| `effective_at` | `timestamptz` | Date this version became effective |
+| `superseded_at` | `timestamptz` | Set when a newer version replaces this one; `NULL` = currently live |
+| `created_at` | `timestamptz` | Auto-set |
+
+**RLS:** Public SELECT (`USING (true)`). No INSERT/UPDATE policy — service role only for seeding and version updates.
+
+**Indexes:**
+- `legal_documents_one_live_per_type` — unique on `(doc_type)` WHERE `superseded_at IS NULL`. Enforces one live version per doc type.
+- `legal_documents_doc_type_idx` — on `(doc_type, effective_at DESC)` for version history queries.
+
+**Version workflow:** INSERT the new row, then `UPDATE` the old row `SET superseded_at = now()`. The unique index prevents two live rows for the same `doc_type`.
+
+**Public pages:** `/legal/terms` · `/legal/privacy` · `/legal/chef-agreement` — server components, `revalidate = 3600`.
+
+---
+
 ### `reviews`
 
 Customer reviews. One review per order (unique index on `order_id`).
