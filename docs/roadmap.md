@@ -115,7 +115,17 @@ Applied migration `20260504000000_compliance_foundation.sql`:
 
 ---
 
-### ⬜ Session 2 — Onboarding Wizard UI + API Routes (NOT STARTED)
+### ✅ Session 2 — Legal pages live + version tracking (DONE 2026-05-05)
+
+- `legal_documents` table: versioned, public RLS, unique live-per-type partial index
+- v1.0.0 seeded for all 3 docs via `npm run seed:legal`
+- `/legal/terms` · `/legal/privacy` · `/legal/chef-agreement` — public, server-rendered, 1h ISR
+- Global footer on all pages: Terms · Privacy · Chef Agreement
+- Version workflow documented in `docs/schema.md`
+
+---
+
+### ⬜ Session 3 — Onboarding Wizard UI + API Routes (NOT STARTED)
 
 **Prerequisite:** Session 1.5 complete (clean DB state, is_active default fixed).
 

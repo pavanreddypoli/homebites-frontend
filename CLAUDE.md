@@ -223,12 +223,20 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Customer browse page and restaurant detail page updated to filter `is_test_data = false`
 - Customer dashboard now shows zero restaurants (correct — no real chefs onboarded yet)
 
-#### ⬜ Session 2 — Onboarding wizard UI + API routes (NOT STARTED)
+#### ✅ Session 2 — Legal pages live + version tracking (DONE 2026-05-05)
+- `legal_documents` table with versioning, public RLS, unique live-per-type index
+- v1.0.0 of all 3 docs seeded (chef_agreement, terms_of_service, privacy_policy)
+- Public routes: `/legal/terms` · `/legal/privacy` · `/legal/chef-agreement`
+- Server components, `revalidate = 3600`, markdown rendered via react-markdown + remark-gfm
+- Global footer added to root layout: Terms · Privacy · Chef Agreement · © RedCube Group LLC
+- Seed script: `npm run seed:legal` (tsx-based, idempotent)
+
+#### ⬜ Session 3 — Onboarding wizard UI + API routes (NOT STARTED)
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1 and 1.5 (DB foundation + schema fixes) are complete and verified in production. Customer dashboard correctly shows zero restaurants. Next choices: Session 2 (onboarding wizard UI + API routes) or Week 7 AI features."
-3. Ask Pavan: "Which do you want to start with — Session 2 onboarding wizard, or Week 7 AI features?"
+2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, and 2 (DB foundation, schema fixes, legal pages) are complete and live in production. Next is Session 3: onboarding wizard UI + API routes."
+3. Ask Pavan: "Ready to start Session 3 — the 7-step onboarding wizard?"
 
 ## Legal Entity
 

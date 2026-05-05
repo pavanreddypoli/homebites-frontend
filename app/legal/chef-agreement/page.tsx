@@ -1,7 +1,7 @@
 import LegalDocPage from "../_components/LegalDocPage";
 import type { Metadata } from "next";
 
-export const revalidate = 0; // TEMP — restore to 3600 after fix
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Chef Agreement — HomeBites AI",

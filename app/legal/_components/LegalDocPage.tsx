@@ -82,15 +82,6 @@ export default async function LegalDocPage({ docType }: { docType: string }) {
     .is("superseded_at", null)
     .single();
 
-  // TEMP DIAGNOSTIC — remove after issue resolved
-  console.log("[LegalDocPage]", {
-    docType,
-    hasData: !!data,
-    error: error?.message,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30) + "...",
-    keyPresent: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  });
-
   const effectiveDate = data
     ? new Date((data as LegalDoc).effective_at).toLocaleDateString("en-US", {
         year: "numeric",
