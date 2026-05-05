@@ -125,7 +125,7 @@ Applied migration `20260504000000_compliance_foundation.sql`:
 
 ---
 
-### ⬜ Session 3 — Customer Click-Through Acceptance + Re-Acceptance Modal (NOT STARTED)
+### ✅ Session 3 — Customer Click-Through Acceptance + Re-Acceptance Modal (DONE 2026-05-05)
 
 **Why now:** Legal docs are live at `/legal/terms` etc. but they don't legally bind anyone until customers actively accept them. Click-through is ~1 day's work with enormous legal value.
 

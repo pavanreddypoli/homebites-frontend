@@ -231,8 +231,14 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Global footer added to root layout: Terms · Privacy · Chef Agreement · © RedCube Group LLC
 - Seed script: `npm run seed:legal` (tsx-based, idempotent)
 
-#### ⬜ Session 3 — Customer click-through acceptance + re-acceptance modal (NOT STARTED)
-Legal docs are live but don't bind anyone until customers actively accept them at signup/checkout. This closes that gap.
+#### ✅ Session 3 — Customer click-through acceptance + re-acceptance modal (DONE 2026-05-05)
+- Signup page: terms/privacy checkbox; submit blocked until checked; logs acceptance on signUp()
+- POST `/api/compliance/log-customer-acceptance` — writes `customer_terms_accepted` rows; idempotent
+- GET `/api/compliance/check-acceptance` — returns unaccepted terms_of_service + privacy_policy for authenticated user (Bearer token)
+- `lib/compliance.ts` — `getUnacceptedLegalDocs` helper (service role; diffs live docs against audit log)
+- `ReAcceptanceModal` — non-dismissible overlay on version bump; scroll lock; auth state listener; sign-out escape
+- `ClientShell` — mounts `ReAcceptanceModal` globally
+- Verified end-to-end: `diagnose:session3` script confirmed 2 rows written to `compliance_audit_log` for real user UUID
 
 #### ⬜ Session 4 — Chef onboarding wizard steps 1–4: Eligibility / Profile / Cert Upload / Agreement (NOT STARTED)
 
@@ -252,8 +258,8 @@ Legal docs are live but don't bind anyone until customers actively accept them a
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, and 2 (DB foundation, schema fixes, legal pages) are complete and live in production. Next is Session 3: customer click-through acceptance so the live legal docs actually bind users."
-3. Ask Pavan: "Ready to start Session 3?"
+2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, 2, and 3 are complete and verified in production. Next is Session 4: Chef onboarding wizard (eligibility attestation, food handler cert upload, product type declaration, labeling ack, chef agreement acceptance)."
+3. Ask Pavan: "Ready to start Session 4?"
 
 ## Legal Entity
 
