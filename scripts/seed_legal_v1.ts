@@ -2,17 +2,21 @@
  * One-time seed: insert v1.0.0 of the three legal documents.
  * Idempotent — skips any (doc_type, version) that already exists.
  *
- * Run: npx ts-node --project tsconfig.json scripts/seed_legal_v1.ts
+ * Run: npm run seed:legal
  * Requires: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
  */
 
-import dotenv from "dotenv";
-import * as path from "path";
+import * as dotenv from "dotenv";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import { createClient } from "@supabase/supabase-js";
+
+// __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, "../.env.local") });
-
-import { createClient } from "@supabase/supabase-js";
-import * as fs from "fs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
