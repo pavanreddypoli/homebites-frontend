@@ -132,7 +132,7 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `id` | `uuid` | Primary key |
 | `user_id` | `uuid` | FK → `auth.users(id)` — the actor |
 | `home_restaurant_id` | `uuid` | FK → `home_restaurants(id)` |
-| `event_type` | `text` | e.g. `'cottage_food_attestation'`, `'agreement_accepted'`, `'cert_uploaded'`, `'stripe_connect_linked'`, `'labeling_acknowledged'`, `'cert_expired_deactivation'`, `'manual_suspension'`, `'annual_reattestation'` |
+| `event_type` | `text` | e.g. `'cottage_food_attestation'`, `'agreement_accepted'`, `'cert_uploaded'`, `'stripe_connect_linked'`, `'labeling_acknowledged'`, `'cert_expired_deactivation'`, `'manual_suspension'`, `'annual_reattestation'`, `'customer_terms_accepted'` |
 | `event_data` | `jsonb` | Arbitrary payload (e.g. `{ questions: [...], answers: [...] }` for attestation events) |
 | `ip_address` | `text` | IP address of the actor |
 | `user_agent` | `text` | Browser/client user-agent |
@@ -145,6 +145,17 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 - DELETE: denied for everyone — policy + immutability trigger
 
 **Index:** `compliance_audit_log_restaurant_idx` on `(home_restaurant_id, created_at DESC)`.
+
+**`event_data` shapes by `event_type`:**
+
+| `event_type` | `event_data` shape |
+|---|---|
+| `customer_terms_accepted` | `{ "doc_type": "terms_of_service" \| "privacy_policy", "version": "1.0.0" }` — one row per doc per acceptance |
+| `cottage_food_attestation` | `{ "questions": [...], "answers": [...] }` |
+| `agreement_accepted` | `{ "version": "1.0.0", "doc_type": "chef_agreement" }` |
+| `cert_uploaded` | `{ "cert_url": "...", "expires_at": "YYYY-MM-DD" }` |
+| `cert_expired_deactivation` | `{ "cert_url": "...", "expired_at": "YYYY-MM-DD" }` |
+| `manual_suspension` | `{ "reason": "..." }` |
 
 ---
 

@@ -16,8 +16,10 @@ export default function SignupPage() {
   const [showConfirm, setShowCf]          = useState(false);
   const [message, setMessage]             = useState("");
   const [loading, setLoading]             = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function handleSignup() {
+    if (!termsAccepted) { setMessage("Please accept the Terms of Service and Privacy Policy."); return; }
     if (password !== confirmPassword) { setMessage("Passwords don't match."); return; }
     if (password.length < 6) { setMessage("Password must be at least 6 characters."); return; }
     setLoading(true);
@@ -30,6 +32,18 @@ export default function SignupPage() {
     });
 
     if (error) { setMessage(error.message); setLoading(false); return; }
+
+    // Best-effort: log acceptance of ToS + Privacy for this new user
+    if (data.user) {
+      fetch("/api/compliance/log-customer-acceptance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: data.user.id,
+          doc_types: ["terms_of_service", "privacy_policy"],
+        }),
+      }).catch(() => {});
+    }
 
     if (data.session) {
       router.push("/dashboard/home-restaurant/onboarding");
@@ -197,9 +211,28 @@ export default function SignupPage() {
               </button>
             </div>
 
+            <label className="flex items-start gap-3 pt-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[var(--hb-primary)] flex-shrink-0"
+              />
+              <span className="text-[13px] leading-[1.5]" style={{ color: "var(--hb-fg-muted)" }}>
+                I agree to the{" "}
+                <Link href="/legal/terms" target="_blank" className="underline font-semibold" style={{ color: "var(--hb-primary)" }}>
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/legal/privacy" target="_blank" className="underline font-semibold" style={{ color: "var(--hb-primary)" }}>
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={!termsAccepted || loading}
               className="w-full py-3.5 rounded-full font-bold text-[15px] text-white mt-2 transition-colors disabled:opacity-60"
               style={{
                 background: "var(--hb-primary)",
