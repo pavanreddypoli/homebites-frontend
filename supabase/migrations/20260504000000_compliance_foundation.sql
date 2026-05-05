@@ -115,7 +115,7 @@ CREATE TRIGGER trg_compliance_audit_log_immutable
 
 CREATE TABLE IF NOT EXISTS public.moderation_queue (
   id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  dish_id             int8        REFERENCES public.dishes(id),
+  dish_id             uuid        REFERENCES public.dishes(id),
   chef_id             uuid        REFERENCES public.home_restaurants(id),
   ai_classification   jsonb,
   ai_decision         text,

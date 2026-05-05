@@ -60,7 +60,7 @@ Menu items belonging to a home restaurant.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | `int8` | Primary key (auto-increment) |
+| `id` | `uuid` | Primary key (confirmed uuid in live DB — schema.md previously listed int8 incorrectly) |
 | `home_restaurant_id` | `uuid` | FK → `home_restaurants.id` |
 | `name` | `text` | Dish display name |
 | `ingredients` | `text` | Comma-separated ingredient list |
@@ -111,7 +111,7 @@ Line items for each order.
 |---|---|---|
 | `id` | `uuid` | Primary key |
 | `order_id` | `uuid` | FK → `orders.id` |
-| `dish_id` | `int8` | FK → `dishes.id` (dish may be archived later — FK is soft) |
+| `dish_id` | `uuid` | FK → `dishes.id` (dish may be archived later — FK is soft) |
 | `dish_name` | `text` | Denormalized snapshot of dish name |
 | `price` | `numeric` | Denormalized snapshot of unit price |
 | `quantity` | `int4` | Number of units ordered |
@@ -152,7 +152,7 @@ Holds dishes sent to Layer 3 manual review when AI returns `decision: 'review'` 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `uuid` | Primary key |
-| `dish_id` | `int8` | FK → `dishes(id)` |
+| `dish_id` | `uuid` | FK → `dishes(id)` |
 | `chef_id` | `uuid` | FK → `home_restaurants(id)` |
 | `ai_classification` | `jsonb` | Full AI response payload |
 | `ai_decision` | `text` | `'allow'` \| `'block'` \| `'review'` |
