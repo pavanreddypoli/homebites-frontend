@@ -141,6 +141,9 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - **Navbar z-index:** Customer browse navbar uses `z-[100]`; checkout and order-confirmation pages use a `sticky top-0 z-[100]` header. CartDrawer sits at `z-50`, so pages always render above it. Do not lower these z-index values.
 - **Guest-first platform:** HomeBites is designed for guest checkout. Login is optional and only needed for order history. Customers browse and pay without an account. The checkout page collects first name, last name, email, and phone — no login gate. Navbar shows only "Become a Chef" for guests; logged-in users see their email + Logout.
 - **Stripe payments — IN PROGRESS (Week 2):** `STRIPE_WEBHOOK_SECRET` in `.env.local` is a placeholder; replace it with the real secret from the Stripe dashboard after running `stripe listen`. The webhook at `/api/stripe-webhook` logs `payment_intent.succeeded` but does not yet create orders — orders are created client-side immediately after `stripe.confirmPayment` succeeds. Async payment methods (bank transfers, etc.) that trigger a redirect will drop the user to `/dashboard/customer` without an order being created; card payments are unaffected.
+- **`is_active` defaults to `true` — DANGEROUS with activation trigger installed.** Any `INSERT` into `home_restaurants` that omits `is_active` will immediately fail `trg_check_activation`'s first check (`food_handler_cert_url is missing`). All application INSERTs must explicitly set `is_active = false`. Fix: `ALTER TABLE home_restaurants ALTER COLUMN is_active SET DEFAULT false` — tracked in Session 1.5 migration.
+- **Existing data cleanup required (Session 1.5).** As of 2026-05-04: 29 rows in `home_restaurants`, 27 with `is_active = true` and all compliance columns NULL. These predate the activation trigger and would fail all compliance checks if reactivated. Must be audited and categorized (seed data vs. real users) before the Session 2 onboarding wizard goes live. Strategy to be decided; see `docs/roadmap.md` Session 1.5.
+- **RLS on `dishes` does not yet enforce `moderation_status`.** The Session 1 migration adds the `moderation_status` column and a check constraint but does not update the existing `dishes` SELECT RLS policy. Customer-facing dish queries filter `moderation_status IN ('approved', 'auto_approved')` only at the application layer — not enforced by RLS. A new RLS policy must be added (Session 1.5) so direct API calls also respect moderation status.
 
 ## Editing Guidelines
 
@@ -150,10 +153,10 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - When adding a new page under `home-restaurant/`, add its link to `NavBar.tsx`.
 - After editing cart logic in `lib/cart.ts`, verify both the customer dashboard inline +/− and the CartDrawer still work correctly.
 
-## Current Status — Last updated: May 2, 2026
+## Current Status — Last updated: May 4, 2026
 
 ### ✅ Week 1 — DONE
-- RLS policies on all 4 Supabase tables
+- RLS policies on all 4 original Supabase tables
 - Auth guard on customer dashboard
 - Currency bug fixed (₹ → $)
 - Stripe keys configured
@@ -199,10 +202,28 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 ### ⬜ Week 8 — NOT STARTED
 - Launch prep, Sentry, 10 chefs onboarded
 
+### 🔄 Compliance Build — IN PROGRESS (started 2026-05-04)
+
+#### ✅ Session 1 — Database foundation (DONE)
+- Migration `20260504000000_compliance_foundation.sql` applied to production
+- 13 compliance columns added to `home_restaurants`
+- 3 moderation columns added to `dishes` (`allergens`, `is_tcs`, `moderation_status`) + check constraint + back-fill to `auto_approved`
+- `compliance_audit_log` table created — append-only, RLS + immutability trigger
+- `moderation_queue` table created — admin-only RLS
+- `trg_check_activation` — blocks `is_active = true` on INSERT and UPDATE until all 8 compliance conditions pass
+- `trg_compliance_audit_log_immutable` — blocks UPDATE/DELETE even for service role
+- Trigger test file: `supabase/tests/test_activation_trigger.sql` — 18 tests, all passed
+- `docs/schema.md` updated with all new tables, columns, triggers, Known Schema Issues
+
+#### ⬜ Session 1.5 — Existing data cleanup (PLANNED — strategy chat first)
+- See `docs/roadmap.md` for scope. Do not start until cleanup strategy is decided with Pavan.
+
+#### ⬜ Session 2 — Onboarding wizard UI + API routes (NOT STARTED)
+
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Weeks 1-6 are complete. Next priority is Week 7: AI search (Anthropic API) and AI menu description writer."
-3. Ask Pavan: "Which do you want to start with today?"
+2. Tell Pavan: "Ready to continue. Session 1 (DB foundation) is complete and all tests passed. Next is Session 1.5: existing data cleanup strategy — we need to decide the approach before writing any migration. Week 7 AI features are also waiting."
+3. Ask Pavan: "Do you want to plan the Session 1.5 cleanup strategy, or switch to Week 7 AI features?"
 
 ## Legal Entity
 
