@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import AdminNav from "@/components/AdminNav";
 
 type QueueEntry = {
   id: string;
@@ -114,9 +115,10 @@ export default function AdminModerationPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-gray-900">Moderation Queue</h1>
+        <h1 className="text-lg font-bold text-gray-900">HomeBites Admin</h1>
         <span className="text-sm text-gray-500">{queue.length} pending</span>
       </header>
+      <AdminNav />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-4">
         {message && (

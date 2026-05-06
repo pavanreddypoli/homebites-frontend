@@ -30,8 +30,33 @@ export async function POST(req: NextRequest) {
     }).eq("id", queue_id),
   ]);
 
-  // TODO Session 9: email chef via Resend with rejection reason
-  console.log(`[admin] rejected dish ${dish_id}: ${reason}`);
+  // Wire deferred rejection email (Session 9)
+  try {
+    const { data: dish } = await supabaseServer
+      .from("dishes")
+      .select("name, home_restaurant_id")
+      .eq("id", dish_id)
+      .single();
+
+    if (dish?.home_restaurant_id) {
+      const { data: chef } = await supabaseServer
+        .from("home_restaurants")
+        .select("name, notification_email")
+        .eq("id", dish.home_restaurant_id)
+        .single();
+
+      if (chef?.notification_email) {
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from:    "HomeBites AI <notifications@homebitesai.com>",
+          to:      chef.notification_email,
+          subject: `Your dish "${dish.name}" was not approved`,
+          html:    `<p>Hi ${chef.name ?? "Chef"},</p><p>Your dish <strong>${dish.name}</strong> was reviewed and could not be approved.</p><blockquote style="border-left:3px solid #E5E7EB;padding:8px 12px;color:#374151;margin:12px 0">${reason}</blockquote><p>Please update the dish and resubmit, or contact us if you have questions.</p>`,
+        });
+      }
+    }
+  } catch { /* non-blocking */ }
 
   return NextResponse.json({ ok: true });
 }

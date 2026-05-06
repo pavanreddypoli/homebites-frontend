@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import CustomerNav from "@/components/CustomerNav";
 import { clearCart, saveCart } from "@/lib/cart";
 import type { Cart } from "@/lib/cart";
-import { ShoppingBag, Search, RotateCcw, ChevronRight } from "lucide-react";
+import { ShoppingBag, Search, RotateCcw, ChevronRight, Flag } from "lucide-react";
 
 type Order = {
   id: string;
@@ -51,6 +51,12 @@ function CustomerOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [reorderingId, setReorderingId] = useState<string | null>(null);
+
+  const [reportTarget, setReportTarget]       = useState<{ orderId: string; chefId: string; customerEmail: string } | null>(null);
+  const [reportCategory, setReportCategory]   = useState("");
+  const [reportDesc, setReportDesc]           = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
 
   // Auto-load: URL ?email= param (from /foodies redirect) takes priority over auth user
   useEffect(() => {
@@ -250,7 +256,7 @@ function CustomerOrdersPage() {
                       <span className="text-[15px] font-bold" style={{ color: "var(--hb-fg)", fontVariantNumeric: "tabular-nums" }}>
                         ${(order.total ?? 0).toFixed(2)}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => handleReorder(order)}
                           disabled={isReordering}
@@ -267,6 +273,21 @@ function CustomerOrdersPage() {
                         >
                           Track <ChevronRight size={12} />
                         </button>
+                        {order.status === "completed" && (
+                          <button
+                            onClick={() => {
+                              setReportTarget({ orderId: order.id, chefId: order.restaurant_id, customerEmail: searchedEmail });
+                              setReportSubmitted(false);
+                              setReportCategory("");
+                              setReportDesc("");
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium"
+                            style={{ color: "#DC2626", border: "1px solid #FECACA", background: "#FFF5F5" }}
+                          >
+                            <Flag size={11} />
+                            Report a problem
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -276,6 +297,105 @@ function CustomerOrdersPage() {
           )}
         </div>
       </div>
+
+      {/* Report a problem modal */}
+      {reportTarget && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
+            <h3 className="text-[16px] font-bold" style={{ color: "var(--hb-fg)" }}>
+              Report a problem
+            </h3>
+
+            {reportSubmitted ? (
+              <div className="py-4 text-center space-y-3">
+                <p className="text-[15px] font-semibold" style={{ color: "#16A34A" }}>Report received</p>
+                <p className="text-[13px]" style={{ color: "#6B7280" }}>
+                  We&apos;ll review your report and follow up within 24–48 hours.
+                </p>
+                <button
+                  onClick={() => { setReportTarget(null); setReportSubmitted(false); setReportCategory(""); setReportDesc(""); }}
+                  className="px-4 py-2 rounded-full text-[13px] font-semibold text-white"
+                  style={{ background: "var(--hb-orange)" }}
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium" style={{ color: "var(--hb-fg)" }}>Category</label>
+                  <select
+                    value={reportCategory}
+                    onChange={(e) => setReportCategory(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2 text-[13px]"
+                    style={{ borderColor: "#E5E7EB", color: "var(--hb-fg)" }}
+                  >
+                    <option value="">Select a category…</option>
+                    <option value="illness_report">Food illness / food safety</option>
+                    <option value="allergen_mislabeling">Allergen mislabeling</option>
+                    <option value="foreign_object">Foreign object in food</option>
+                    <option value="spoilage_mold">Spoilage / mold</option>
+                    <option value="fraud_misrepresentation">Fraud / misrepresentation</option>
+                    <option value="service_complaint">Service complaint</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium" style={{ color: "var(--hb-fg)" }}>
+                    Description <span className="text-gray-400 font-normal">(min 20 characters)</span>
+                  </label>
+                  <textarea
+                    value={reportDesc}
+                    onChange={(e) => setReportDesc(e.target.value)}
+                    rows={4}
+                    placeholder="Describe what happened…"
+                    className="w-full border rounded-xl px-3 py-2 text-[13px] resize-none"
+                    style={{ borderColor: "#E5E7EB", color: "var(--hb-fg)" }}
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => { setReportTarget(null); setReportCategory(""); setReportDesc(""); }}
+                    className="px-4 py-2 rounded-full text-[13px] font-semibold"
+                    style={{ color: "#6B7280", background: "#F3F4F6" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={!reportCategory || reportDesc.trim().length < 20 || reportSubmitting}
+                    onClick={async () => {
+                      if (!reportTarget) return;
+                      setReportSubmitting(true);
+                      try {
+                        await fetch("/api/incidents/create", {
+                          method:  "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body:    JSON.stringify({
+                            category:         reportCategory,
+                            description:      reportDesc.trim(),
+                            reporter_email:   reportTarget.customerEmail,
+                            subject_chef_id:  reportTarget.chefId,
+                            subject_order_id: reportTarget.orderId,
+                          }),
+                        });
+                        setReportSubmitted(true);
+                      } catch {
+                        alert("Failed to submit report. Please try again.");
+                      } finally {
+                        setReportSubmitting(false);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-full text-[13px] font-semibold text-white disabled:opacity-50"
+                    style={{ background: "var(--hb-orange)" }}
+                  >
+                    {reportSubmitting ? "Submitting…" : "Submit report"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

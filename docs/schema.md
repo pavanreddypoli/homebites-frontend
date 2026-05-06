@@ -156,9 +156,12 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `agreement_accepted` | `{ "version": "1.0.0", "doc_type": "chef_agreement" }` |
 | `cert_uploaded` | `{ "cert_url": "...", "expires_at": "YYYY-MM-DD" }` |
 | `cert_expired_deactivation` | `{ "cert_expired_at": "YYYY-MM-DD", "suspended_at": ISO8601 }` — written by cron; `ip_address = "cron"`, `user_agent = "vercel-cron/expire-certs"` |
-| `manual_suspension` | `{ "reason": "..." }` |
+| `manual_suspension` | `{ "reason": "...", "related_incident_id": uuid\|null, "suspended_until_review": true }` — written by admin suspend action |
 | `labeling_acknowledged` | `{ "acknowledged_at": ISO8601 }` |
 | `cottage_food_acknowledged_at_order` | `{ "order_id": uuid, "restaurant_id": text, "acknowledged_at": ISO8601 }` |
+| `incident_created` | `{ "incident_id": uuid, "severity": "P0"\|"P1"\|"P2"\|"P3", "category": string }` — written on new incident report |
+| `incident_resolved` | `{ "incident_id": uuid, "resolution_notes": string\|null, "status": "resolved"\|"closed" }` — written on admin resolve/close |
+| `chef_reactivated` | `{ "reactivated_by": email, "cleared_suspension_reason": string }` — written when admin lifts suspension (does NOT set `is_active`) |
 
 ---
 
@@ -185,6 +188,47 @@ Holds dishes sent to Layer 3 manual review when AI returns `decision: 'review'` 
 **Indexes:**
 - `moderation_queue_dish_idx` on `(dish_id)`
 - `moderation_queue_unreviewed_idx` on `(created_at ASC)` WHERE `human_decision IS NULL` — efficient queue drain sorted oldest-first
+
+---
+
+### `incidents` _(added migration 20260507000000)_
+
+Customer-reported food safety and service incidents.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | Primary key |
+| `reporter_id` | `uuid` | FK → `auth.users(id)` — nullable; `NULL` for guest reporters |
+| `reporter_email` | `text` | Required for follow-up |
+| `subject_chef_id` | `uuid` | FK → `home_restaurants(id)` — chef being reported |
+| `subject_order_id` | `uuid` | FK → `orders(id)` — nullable; some reports not tied to a specific order |
+| `severity` | `text` | CHECK: `'P0'` `'P1'` `'P2'` `'P3'`. Set server-side from category map — never from client |
+| `category` | `text` | CHECK: `illness_report` `allergen_mislabeling` `foreign_object` `spoilage_mold` `fraud_misrepresentation` `service_complaint` `other` |
+| `status` | `text` | CHECK: `'open'` `'investigating'` `'resolved'` `'closed'`. Default `'open'` |
+| `description` | `text` | Minimum 20 chars enforced in API route |
+| `resolution_notes` | `text` | Admin fills in when resolving |
+| `resolved_at` | `timestamptz` | Set when status → `resolved` |
+| `resolver_id` | `uuid` | FK → `auth.users(id)` — admin who resolved |
+| `created_at` | `timestamptz` | Auto-set |
+| `updated_at` | `timestamptz` | Auto-updated by trigger `trg_incidents_updated_at` |
+
+**Severity map (server-side only):**
+
+| Category | Severity |
+|---|---|
+| `illness_report` | P0 |
+| `allergen_mislabeling` | P1 |
+| `foreign_object` | P1 |
+| `spoilage_mold` | P1 |
+| `fraud_misrepresentation` | P2 |
+| `service_complaint` | P3 |
+| `other` | P3 |
+
+**RLS:**
+- Authenticated reporters can SELECT their own rows (`auth.uid() = reporter_id`).
+- Authenticated users can INSERT with their own `reporter_id` (`auth.uid() = reporter_id`). Guest inserts (null `reporter_id`) go through the API which uses service role.
+- Chefs have no policy — they cannot see incidents about them.
+- Service role bypasses RLS for all admin operations.
 
 ---
 

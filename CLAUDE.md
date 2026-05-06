@@ -152,7 +152,7 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - When adding a new page under `home-restaurant/`, add its link to `NavBar.tsx`.
 - After editing cart logic in `lib/cart.ts`, verify both the customer dashboard inline +/− and the CartDrawer still work correctly.
 
-## Current Status — Last updated: May 4, 2026
+## Current Status — Last updated: May 6, 2026
 
 ### ✅ Week 1 — DONE
 - RLS policies on all 4 original Supabase tables
@@ -292,7 +292,26 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - `scripts/diagnose_session_8.ts`: 3 test scenarios, try/finally cleanup, no is_test_data flag-flipping; 13/13 checks passed
 - **Deployment note:** Cron registers automatically with Vercel on next deploy via `vercel.json`. First run at 8 AM UTC the day after deploy. CRON_SECRET auto-populates — no manual setup.
 
-#### ⬜ Session 9 — Incident response infrastructure (NOT STARTED)
+#### ✅ Session 9 — Incident response infrastructure (DONE)
+- `supabase/migrations/20260507000000_incidents.sql`: incidents table; `trg_incidents_updated_at`; RLS: reporter SELECT/INSERT own rows (no guest INSERT via anon key — service role handles guest reports); chefs have no policy
+- `app/api/incidents/create/route.ts`: public POST; optional Bearer auth; server-side SEVERITY_MAP; UUID format validation before INSERT (FIX 1 — `orders.restaurant_id` is text in DB); non-blocking audit log + confirmation email + P0/P1 admin alert
+- `app/api/admin/incidents/route.ts`: GET list with status/severity filters; enriched with chef names
+- `app/api/admin/incidents/[id]/route.ts`: GET detail — incident + chef (with suspended_at) + order + orderItems + auditLog (50 rows)
+- `app/api/admin/incidents/update/route.ts`: POST status/resolution; writes incident_resolved audit log on resolved/closed
+- `app/api/admin/chefs/suspend/route.ts`: POST manual suspension; is_active=false + suspended_at; writes manual_suspension audit log; emails chef
+- `app/api/admin/chefs/reactivate/route.ts`: POST clears suspended_at only (does NOT set is_active — activation trigger handles compliance gate); writes chef_reactivated audit log; emails chef
+- `app/api/admin/audit-log/route.ts`: GET paginated (50/page); filterable by email/event_type/date range; export mode returns 1000 rows
+- `app/api/admin/review/reject/route.ts`: wired deferred rejection email (fetches dish name + chef notification_email; non-blocking)
+- `components/AdminNav.tsx`: shared nav for all /admin/* pages (Moderation Queue · Incidents · Audit Log)
+- `app/admin/incidents/page.tsx`: list with status/severity filters + severity/status badges
+- `app/admin/incidents/[id]/page.tsx`: detail with action buttons; suspend/resolve/reactivate modals (FIX 3: reactivate requires typed reason, not a bare link; uses modal state "suspend" | "resolve" | "reactivate" | null)
+- `app/admin/audit-log/page.tsx`: viewer with expand/collapse JSON; pagination; CSV export
+- `app/admin/moderation/page.tsx`: added AdminNav
+- `app/dashboard/customer/orders/page.tsx`: "Report a problem" button on completed orders; category dropdown + description modal; calls /api/incidents/create (no Bearer required)
+- `docs/schema.md`: incidents table + new event types (incident_created, incident_resolved, manual_suspension updated, chef_reactivated)
+- **RLS note (FIX 2):** incidents_reporter_insert requires `auth.uid() = reporter_id` — blocks anon-key spam; guest reports still work via service role in API route
+
+#### ⬜ Session 10 — Public help/legal pages + chef recruitment landing (NOT STARTED)
 
 #### ⬜ Session 10 — Public help/legal pages + chef recruitment landing (NOT STARTED)
 
@@ -300,8 +319,8 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–8 are complete. Next is Session 9: incident response infrastructure (runbooks, alerting, escalation paths)."
-3. Ask Pavan: "Ready to start Session 9?"
+2. Tell Pavan: "Ready to continue. Sessions 1–9 are complete. Next is Session 10: public help/legal pages and chef recruitment landing."
+3. Ask Pavan: "Ready to start Session 10?"
 
 ## Legal Entity
 
