@@ -39,6 +39,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
   const [phone, setPhone] = useState("");
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+  const [cottageAcknowledged, setCottageAcknowledged] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +51,11 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
     }
     if (!email.trim()) {
       setError("Please enter your email address.");
+      return;
+    }
+
+    if (!cottageAcknowledged) {
+      setError("Please acknowledge the cottage food disclosure to continue.");
       return;
     }
 
@@ -92,6 +98,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
           p_status: "placed",
           p_customer_email: email,
           p_items: itemsPayload,
+          p_cottage_food_acknowledged_at: new Date().toISOString(),
         }
       );
 
@@ -105,6 +112,22 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
       }
 
       clearCart();
+
+      // Best-effort compliance audit log
+      (async () => {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (user?.id) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers["Authorization"] = `Bearer ${session.access_token}`;
+          }
+        }
+        return fetch("/api/compliance/log-cottage-food-ack", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ order_id: orderId, restaurant_id: cart.restaurant_id }),
+        });
+      })().catch((err) => console.error("cottage-food audit log failed:", err));
 
       // Best-effort confirmation email
       fetch("/api/notify-order", {
@@ -183,6 +206,51 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
           </p>
         </Card>
 
+        {/* Cottage-food disclosure — verbatim ToS Section 3 */}
+        <section
+          className="rounded-2xl p-5"
+          style={{
+            background: "var(--hb-primary-soft)",
+            border: "1px solid rgba(255,122,57,.25)",
+            boxShadow: "var(--hb-shadow-soft)",
+          }}
+        >
+          <p className="text-[13px] font-semibold mb-2" style={{ color: "var(--hb-primary-dark, #C45000)" }}>
+            Important: cottage food disclosure
+          </p>
+          <p className="text-[13px] leading-relaxed mb-3" style={{ color: "var(--hb-fg)" }}>
+            All food sold through HomeBites AI is prepared in{" "}
+            <strong>home kitchens</strong> by individuals operating under the Texas Cottage Food
+            Law (Texas Health &amp; Safety Code Chapter 437).
+          </p>
+          <p
+            className="text-[12px] leading-relaxed mb-3 p-3 rounded-lg font-bold tracking-tight uppercase"
+            style={{ background: "rgba(255,255,255,.6)", color: "var(--hb-fg)" }}
+          >
+            The food you order was produced in a private residence that is not subject to
+            governmental licensing or inspection.
+          </p>
+          <p className="text-[12px] leading-relaxed mb-4" style={{ color: "var(--hb-fg-muted)" }}>
+            Chefs are required to disclose allergens on labels.{" "}
+            <strong>
+              If you have a food allergy or dietary restriction, contact the chef directly before
+              ordering.
+            </strong>{" "}
+            HomeBites AI does not verify allergen information.
+          </p>
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={cottageAcknowledged}
+              onChange={(e) => setCottageAcknowledged(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded accent-[var(--hb-primary)] flex-shrink-0"
+            />
+            <span className="text-[13px] font-medium" style={{ color: "var(--hb-fg)" }}>
+              I understand and accept this.
+            </span>
+          </label>
+        </section>
+
         {error && (
           <div
             className="flex items-start gap-2 p-3.5 rounded-xl text-[13px]"
@@ -200,7 +268,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
         {/* Mobile pay button */}
         <button
           type="submit"
-          disabled={!stripe || paying}
+          disabled={!stripe || paying || !cottageAcknowledged}
           className="lg:hidden w-full py-3.5 rounded-full font-bold text-[15px] text-white transition-colors disabled:opacity-60"
           style={{
             background: "var(--hb-primary)",
@@ -246,7 +314,7 @@ function CheckoutForm({ cart, user, subtotal, serviceFee, tax, total }: Checkout
 
         <button
           type="submit"
-          disabled={!stripe || paying}
+          disabled={!stripe || paying || !cottageAcknowledged}
           className="hidden lg:block w-full py-3.5 rounded-full font-bold text-[15px] text-white transition-colors disabled:opacity-60"
           style={{
             background: "var(--hb-primary)",

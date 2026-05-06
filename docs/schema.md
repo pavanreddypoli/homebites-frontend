@@ -98,6 +98,7 @@ One row per customer order.
 | `order_type` | `text` | Currently always `"pickup"` |
 | `status` | `text` | `"placed"` → `"ready"` → `"completed"` |
 | `customer_email` | `text` | Provided at checkout; used for notifications |
+| `cottage_food_acknowledged_at` | `timestamptz` | Set at order creation; nullable for legacy/test orders. Required for all new orders — `create_order_with_items` raises an exception if NULL. |
 | `customer_name` | `text` | Nullable; not currently collected at checkout |
 | `pickup_address` | `text` | Nullable; not yet populated |
 | `created_at` | `timestamptz` | Auto-set by Supabase |
@@ -132,7 +133,7 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `id` | `uuid` | Primary key |
 | `user_id` | `uuid` | FK → `auth.users(id)` — the actor |
 | `home_restaurant_id` | `uuid` | FK → `home_restaurants(id)` |
-| `event_type` | `text` | e.g. `'cottage_food_attestation'`, `'agreement_accepted'`, `'cert_uploaded'`, `'stripe_connect_linked'`, `'labeling_acknowledged'`, `'cert_expired_deactivation'`, `'manual_suspension'`, `'annual_reattestation'`, `'customer_terms_accepted'` |
+| `event_type` | `text` | e.g. `'cottage_food_attestation'`, `'agreement_accepted'`, `'cert_uploaded'`, `'stripe_connect_linked'`, `'labeling_acknowledged'`, `'cert_expired_deactivation'`, `'manual_suspension'`, `'annual_reattestation'`, `'customer_terms_accepted'`, `'cottage_food_acknowledged_at_order'` |
 | `event_data` | `jsonb` | Arbitrary payload (e.g. `{ questions: [...], answers: [...] }` for attestation events) |
 | `ip_address` | `text` | IP address of the actor |
 | `user_agent` | `text` | Browser/client user-agent |
@@ -157,6 +158,7 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `cert_expired_deactivation` | `{ "cert_url": "...", "expired_at": "YYYY-MM-DD" }` |
 | `manual_suspension` | `{ "reason": "..." }` |
 | `labeling_acknowledged` | `{ "acknowledged_at": ISO8601 }` |
+| `cottage_food_acknowledged_at_order` | `{ "order_id": uuid, "restaurant_id": text, "acknowledged_at": ISO8601 }` |
 
 ---
 
@@ -256,18 +258,20 @@ Creates an order and its line items atomically. Returns the new order `id`.
 
 ```sql
 create_order_with_items(
-  p_customer_id      uuid,
-  p_restaurant_id    uuid,
-  p_restaurant_name  text,
-  p_subtotal         numeric,
-  p_service_fee      numeric,
-  p_tax              numeric,
-  p_total            numeric,
-  p_order_type       text,
-  p_status           text,
-  p_customer_email   text,
-  p_items            jsonb   -- array of {dish_id, dish_name, price, quantity}
+  p_customer_id                   uuid,
+  p_restaurant_id                 uuid,
+  p_restaurant_name               text,
+  p_subtotal                      numeric,
+  p_service_fee                   numeric,
+  p_tax                           numeric,
+  p_total                         numeric,
+  p_order_type                    text,
+  p_status                        text,
+  p_customer_email                text,
+  p_items                         jsonb,   -- array of {dish_id, dish_name, price, quantity}
+  p_cottage_food_acknowledged_at  timestamptz DEFAULT NULL  -- required; RAISE EXCEPTION if NULL
 ) RETURNS uuid
+SECURITY DEFINER
 ```
 
 ### `get_order_with_items`

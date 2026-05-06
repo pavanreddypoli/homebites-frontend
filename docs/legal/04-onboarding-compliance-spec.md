@@ -150,11 +150,17 @@ When the agreement version increments, set a flag forcing chefs to re-accept on 
 ## Customer-Facing Disclosures
 
 ### At checkout
-Above the Pay button, render:
+Above the Pay button, render a disclosure card containing three elements:
 
-> **Important:** This food is prepared in a home kitchen by an independent chef under the Texas Cottage Food Law. **It has not been inspected by any government agency.** Allergens are listed by the chef — please verify directly with the chef if you have allergies.
+1. Context sentence: "All food sold through HomeBites AI is prepared in **home kitchens** by individuals operating under the Texas Cottage Food Law (Texas Health & Safety Code Chapter 437)."
 
-Customer must check a box: "I understand and accept this." Persist the acknowledgment in the `orders` table (`cottage_food_acknowledged_at`).
+2. Verbatim formal disclosure from Customer ToS Section 3 (all-caps, visually distinct):
+   > **THE FOOD YOU ORDER WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT SUBJECT TO GOVERNMENTAL LICENSING OR INSPECTION.**
+
+3. Allergen warning from Customer ToS Section 3:
+   > Chefs are required to disclose allergens on labels. **If you have a food allergy or dietary restriction, contact the chef directly before ordering.** HomeBites AI does not verify allergen information.
+
+Customer must check a box: "I understand and accept this." Persist the acknowledgment in the `orders` table (`cottage_food_acknowledged_at`). Log to `compliance_audit_log` with `event_type = 'cottage_food_acknowledged_at_order'`.
 
 ### On every dish card
 Small badge: "🏠 Home kitchen"
