@@ -99,7 +99,7 @@ Texas Cottage Food Law (SB 541) compliance. Session order reflects build depende
 | 4 | Chef onboarding wizard steps 1–4 | ✅ Done | Eligibility / Profile / Cert Upload / Agreement |
 | 5 | Labeling step + label PDF generator | ✅ Done | Wizard step 5; `/api/labels/[orderId]`; 4"×6" PDF per unit; TX SB 541 text; TCS safe handling; allergen gap tracked |
 | 6 | Customer checkout cottage-food disclosure | ✅ Done | `cottage_food_acknowledged_at` on orders; RPC updated; disclosure card + checkbox gate at checkout; audit log |
-| 7 | Three-layer content moderation | ⬜ Not started | Keyword filter → AI review → human escalation — **next** |
+| 7 | Three-layer content moderation | ✅ Done | Keyword filter → AI classifier (Haiku) → human queue; chef add/edit flows wired; admin queue at `/admin/moderation`; chef notification emails deferred to Session 9 |
 | 8 | Daily cron for expired certs | ⬜ Not started | Warn 30/7/1 days; auto-deactivate on expiry |
 | 9 | Incident response infrastructure | ⬜ Not started | Runbooks, alerting, escalation paths |
 | 10 | Public help/legal pages + chef recruitment | ⬜ Not started | Static content, FAQ, chef landing page |

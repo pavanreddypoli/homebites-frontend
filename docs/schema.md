@@ -71,7 +71,7 @@ Menu items belonging to a home restaurant.
 | `price` | `numeric` | Price in dollars (nullable) |
 | `image_url` | `text` | Public URL from Supabase Storage bucket `dish-images` |
 | `is_archived` | `boolean` | Soft-delete flag. **Never hard-delete dishes** (FK from `order_items.dish_id`). All customer queries must filter `is_archived = false`. |
-| `allergens` | `text[]` | FDA Big-9 allergens detected + confirmed by chef (default `'{}'`). Pre-filled by AI, editable by chef. Used by label generator. |
+| `allergens` | `text[]` | FDA Big-9 allergens detected + confirmed by chef (default `'{}'`). On dish save, the moderation API (Layer 2 — Haiku classifier) returns detected allergens which are unioned with the chef's manual selections. Editable by chef. Used by label generator. |
 | `is_tcs` | `boolean` | True if dish requires temperature control for safety (e.g. cheesecake, cooked curries). Requires chef to have `dshs_registration_id`. Default `false`. |
 | `moderation_status` | `text` | Constraint: `'pending_review'` \| `'approved'` \| `'rejected'` \| `'auto_approved'`. Only `approved` and `auto_approved` are visible to customers. |
 
@@ -171,7 +171,7 @@ Holds dishes sent to Layer 3 manual review when AI returns `decision: 'review'` 
 | `id` | `uuid` | Primary key |
 | `dish_id` | `uuid` | FK → `dishes(id)` |
 | `chef_id` | `uuid` | FK → `home_restaurants(id)` |
-| `ai_classification` | `jsonb` | Full AI response payload |
+| `ai_classification` | `jsonb` | Full moderation payload: `{ dish_name, dish_description, dish_ingredients, layer1: { status, matched? }, layer2: { decision, category, reason, confidence, allergens[] } }` |
 | `ai_decision` | `text` | `'allow'` \| `'block'` \| `'review'` |
 | `ai_confidence` | `numeric` | 0.0–1.0 |
 | `human_decision` | `text` | `'approved'` \| `'rejected'` — null until reviewed |

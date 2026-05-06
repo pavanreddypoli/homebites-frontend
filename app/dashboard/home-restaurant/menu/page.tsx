@@ -16,6 +16,7 @@ type Dish = {
   image_url?: string;
   home_restaurant_id?: string;
   is_archived: boolean;
+  moderation_status?: string;
 };
 
 export default function MyMenuItems() {
@@ -33,7 +34,7 @@ export default function MyMenuItems() {
       const { data: restaurantRow } = await supabase
         .from("home_restaurants")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .single();
 
       if (!restaurantRow) { setLoading(false); return; }
@@ -224,6 +225,22 @@ export default function MyMenuItems() {
                       style={{ background: "#6B7280" }}
                     >
                       Archived
+                    </span>
+                  )}
+                  {!dish.is_archived && dish.moderation_status === "pending_review" && (
+                    <span
+                      className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold leading-none"
+                      style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" }}
+                    >
+                      Under review
+                    </span>
+                  )}
+                  {!dish.is_archived && dish.moderation_status === "rejected" && (
+                    <span
+                      className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold leading-none"
+                      style={{ background: "#FEF2F2", color: "#991B1B", border: "1px solid #FCA5A5" }}
+                    >
+                      Rejected
                     </span>
                   )}
                 </div>

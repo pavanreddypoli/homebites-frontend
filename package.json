@@ -13,6 +13,7 @@
     "test:labels": "tsx scripts/test_label_generation.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-pdf/renderer": "^4.5.1",
     "@stripe/react-stripe-js": "^6.2.0",
@@ -27,6 +28,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "resend": "^6.6.0",
+    "server-only": "^0.0.1",
     "stripe": "^22.1.0",
     "tailwind-merge": "^3.4.0"
   },

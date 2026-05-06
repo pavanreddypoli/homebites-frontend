@@ -375,7 +375,8 @@ export default function CustomerDashboard() {
         supabase
           .from("dishes")
           .select("id, name, description, price, home_restaurant_id, image_url")
-          .eq("is_archived", false),
+          .eq("is_archived", false)
+          .in("moderation_status", ["approved", "auto_approved"]),
         supabase
           .from("reviews")
           .select("restaurant_id, rating"),

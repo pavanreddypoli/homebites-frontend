@@ -266,7 +266,23 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - POST `/api/compliance/log-cottage-food-ack`: service-role write to `compliance_audit_log`; guest-safe (user_id nullable); best-effort — does not block order on failure
 - `docs/schema.md` and `docs/legal/04-onboarding-compliance-spec.md` updated
 
-#### ⬜ Session 7 — Three-layer content moderation system (NOT STARTED)
+#### ✅ Session 7 — Three-layer content moderation system (DONE)
+- `lib/moderation/keywords.ts` — Layer 1 keyword filter: EN + ES + Hindi-transliterated block/review lists; `\b` word boundaries; multi-word phrases
+- `lib/moderation/classifier.ts` — Layer 2: Claude Haiku (`claude-haiku-4-5-20251001`); `import "server-only"` guard; allergen detection; fail-safe → `"review"` on error
+- `lib/moderation/moderate.ts` — Pipeline: L1 hard-block skips API cost; `pending_review` if L1=review OR L2=review OR confidence<0.85
+- `app/api/moderation/check-dish/route.ts` — POST; Bearer auth; home_restaurant role check; inserts to `moderation_queue`; returns `{ status, reason, allergens }`
+- `app/api/admin/check-admin/route.ts` — GET; reads `ADMIN_EMAILS` env var server-side
+- `app/api/admin/queue/route.ts` — GET; admin-only; fetches unreviewed queue + chef names
+- `app/api/admin/review/approve/route.ts` — POST; updates `dishes.moderation_status = 'approved'` + queue entry
+- `app/api/admin/review/reject/route.ts` — POST; requires `reason`; updates dish + queue entry
+- `app/api/chef/dish-rejection-reason/route.ts` — GET; verifies chef ownership; returns `human_reason`
+- `app/dashboard/home-restaurant/add-item/page.tsx` — wired to moderation API; allergen union; `phase` state; pending_review redirect
+- `app/dashboard/home-restaurant/edit-item/[id]/page.tsx` — wired; rejection/pending banners; `originalContent` skip-moderation optimization
+- `app/dashboard/home-restaurant/menu/page.tsx` — `moderation_status` added to Dish type; "Under review" + "Rejected" badges; `.eq("id", user.id)` bug fixed
+- `app/dashboard/customer/page.tsx` — dishes query filtered `.in("moderation_status", ["approved", "auto_approved"])`
+- `app/dashboard/customer/restaurant/[id]/page.tsx` — same filter
+- `app/admin/moderation/page.tsx` — admin queue UI; approve/reject with reason; L1+L2 detail display
+- **Deferred:** Chef notification emails on approve/reject → Session 9 (Resend); dish_id is null for new-dish moderation runs (known gap, admin UI disables approve/reject for those rows)
 
 #### ⬜ Session 8 — Daily cron for expired certs (NOT STARTED)
 
@@ -278,8 +294,8 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–6 are complete and verified. Next is Session 7: three-layer content moderation (keyword filter → AI review → human escalation)."
-3. Ask Pavan: "Ready to start Session 7?"
+2. Tell Pavan: "Ready to continue. Sessions 1–7 are complete. Next is Session 8: daily cron for expired certs (warn 30/7/1 days; auto-deactivate on expiry)."
+3. Ask Pavan: "Ready to start Session 8?"
 
 ## Legal Entity
 

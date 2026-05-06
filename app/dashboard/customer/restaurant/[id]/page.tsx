@@ -104,6 +104,7 @@ export default function RestaurantMenuPage() {
           .select("id, name, description, price, image_url")
           .eq("home_restaurant_id", restaurantId)
           .eq("is_archived", false)
+          .in("moderation_status", ["approved", "auto_approved"])
           .order("id", { ascending: false }),
         supabase
           .from("reviews")
