@@ -155,7 +155,7 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `cottage_food_attestation` | `{ "questions": [...], "answers": [...] }` |
 | `agreement_accepted` | `{ "version": "1.0.0", "doc_type": "chef_agreement" }` |
 | `cert_uploaded` | `{ "cert_url": "...", "expires_at": "YYYY-MM-DD" }` |
-| `cert_expired_deactivation` | `{ "cert_url": "...", "expired_at": "YYYY-MM-DD" }` |
+| `cert_expired_deactivation` | `{ "cert_expired_at": "YYYY-MM-DD", "suspended_at": ISO8601 }` — written by cron; `ip_address = "cron"`, `user_agent = "vercel-cron/expire-certs"` |
 | `manual_suspension` | `{ "reason": "..." }` |
 | `labeling_acknowledged` | `{ "acknowledged_at": ISO8601 }` |
 | `cottage_food_acknowledged_at_order` | `{ "order_id": uuid, "restaurant_id": text, "acknowledged_at": ISO8601 }` |

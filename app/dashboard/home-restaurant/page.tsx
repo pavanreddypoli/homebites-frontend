@@ -28,8 +28,8 @@ export default function HomeRestaurantDashboard() {
 
       const { data } = await supabase
         .from("home_restaurants")
-        .select("id, name, description, hours, is_open, closed_message")
-        .eq("user_id", user.id)
+        .select("id, name, description, hours, is_open, closed_message, suspended_at, suspension_reason")
+        .eq("id", user.id)
         .maybeSingle();
 
       if (!data) {
@@ -136,6 +136,32 @@ export default function HomeRestaurantDashboard() {
       <ChefNav />
 
       <main className="pt-14 max-w-[900px] mx-auto px-4 lg:px-8 py-8">
+
+        {/* ── Suspension banner ── */}
+        {restaurant?.suspended_at && (
+          <div
+            className="rounded-2xl p-5 mb-6"
+            style={{ background: "#FEF2F2", border: "1px solid #FCA5A5" }}
+          >
+            <p className="text-[14px] font-bold mb-2" style={{ color: "#991B1B" }}>
+              ⚠ Your listing is currently suspended
+            </p>
+            <p className="text-[13px] mb-3 leading-relaxed" style={{ color: "#7F1D1D" }}>
+              {restaurant.suspension_reason ?? "Your account has been temporarily suspended."}
+            </p>
+            <p className="text-[13px] mb-3 leading-relaxed" style={{ color: "#7F1D1D" }}>
+              To reactivate: upload a renewed food handler certificate via the onboarding wizard.
+              Your listing will go live automatically once your cert is current.
+            </p>
+            <a
+              href="/dashboard/home-restaurant/onboarding"
+              className="inline-block px-4 py-2 rounded-full text-[13px] font-semibold text-white"
+              style={{ background: "#DC2626" }}
+            >
+              Upload renewed cert →
+            </a>
+          </div>
+        )}
 
         {/* ── Availability toggle card ── */}
         <div

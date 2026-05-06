@@ -107,6 +107,12 @@ Texas Cottage Food Law (SB 541) compliance. Session order reflects build depende
 
 ---
 
+## Future Improvements — Cron & Cert Expiry
+
+Cron warning emails currently use exact-match dates (`.eq("food_handler_cert_expires_at", today30/14/7)`). If a cron run is missed (Vercel infra hiccup), a chef may skip a warning threshold entirely. Future: add `warning_30_sent_at`, `warning_14_sent_at`, `warning_7_sent_at` columns to `home_restaurants` and use `lte` combined with these flags to ensure each warning fires at least once even after a missed run.
+
+---
+
 ## Future Tuning — Content Moderation Pipeline
 
 After launch + 100+ moderated dishes with zero false-negatives in the L1=review/L2=allow combo, consider relaxing pipeline to allow auto-approval when L2 confidence > 0.95 AND L1 is review-flag (not hard-block). Until then, conservative default: any L1 flag forces human queue.
