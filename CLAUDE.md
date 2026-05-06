@@ -284,7 +284,13 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - `app/admin/moderation/page.tsx` — admin queue UI; approve/reject with reason; L1+L2 detail display
 - **Deferred:** Chef notification emails on moderation reject — wire existing Resend setup in Session 9. For now, chef sees rejection on menu page via red badge. dish_id is null for new-dish moderation runs (known gap, admin UI disables approve/reject for those rows)
 
-#### ⬜ Session 8 — Daily cron for expired certs (NOT STARTED)
+#### ✅ Session 8 — Daily cron for expired certs (DONE)
+- `vercel.json`: cron schedule `0 8 * * *` (8 AM UTC = 3 AM Eastern / 2 AM Central)
+- `lib/cron/expire-certs-logic.ts`: injectable logic (db + sendEmail + opts.includeTestData); Step 1 suspends expired chefs (`lte` for missed-run safety); Steps 2–4 send 30/14/7-day warnings (exact-match dates — one email per threshold)
+- `app/api/cron/expire-certs/route.ts`: CRON_SECRET auth (auto-populated by Vercel on deploy); dev bypass via `NODE_ENV=development`
+- `app/dashboard/home-restaurant/page.tsx`: suspension banner with cert upload CTA; fixed pre-existing `.eq("user_id")` → `.eq("id")` bug
+- `scripts/diagnose_session_8.ts`: 3 test scenarios, try/finally cleanup, no is_test_data flag-flipping; 13/13 checks passed
+- **Deployment note:** Cron registers automatically with Vercel on next deploy via `vercel.json`. First run at 8 AM UTC the day after deploy. CRON_SECRET auto-populates — no manual setup.
 
 #### ⬜ Session 9 — Incident response infrastructure (NOT STARTED)
 
@@ -294,8 +300,8 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–7 are complete. Next is Session 8: daily cron for expired certs (warn 30/7/1 days; auto-deactivate on expiry)."
-3. Ask Pavan: "Ready to start Session 8?"
+2. Tell Pavan: "Ready to continue. Sessions 1–8 are complete. Next is Session 9: incident response infrastructure (runbooks, alerting, escalation paths)."
+3. Ask Pavan: "Ready to start Session 9?"
 
 ## Legal Entity
 
