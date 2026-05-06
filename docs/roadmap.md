@@ -68,6 +68,13 @@
 
 ---
 
+## Post-Launch (Fundraising Phase)
+
+- [ ] **Foodies subscription tier** — paid customer tier with AI meal planning, taste matching, and custom meal builder across kitchens. Decide pricing post-launch based on engagement. Waitlist live at `/foodies`.
+- [ ] **BiteRunners courier program** — community delivery network. Riders are local residents earning side income via hyper-local routes. Launch post-funding once unit economics are proven. Waitlist live at `/biterunners`.
+
+---
+
 ## Technical Debt
 
 - [ ] Remove or wire up `components/FloatingCartButton.tsx` (currently orphaned)
@@ -79,133 +86,30 @@
 
 ---
 
-## Compliance Build Sessions (Texas Cottage Food Law / SB 541)
+## Compliance Build — Session Roadmap
 
-### ✅ Session 1 — Database Foundation (2026-05-04)
+Texas Cottage Food Law (SB 541) compliance. Session order reflects build dependencies and operational risk.
 
-Applied migration `20260504000000_compliance_foundation.sql`:
+| # | Session | Status | Notes |
+|---|---------|--------|-------|
+| 1 | DB compliance foundation | ✅ Done | Columns, triggers, audit log, moderation tables |
+| 1.5 | Test data tagging + schema fixes | ✅ Done | `is_test_data`, `is_active` default=false, timestamptz |
+| 2 | Legal pages live + version tracking | ✅ Done | `/legal/terms`, `/legal/privacy`, `/legal/chef-agreement` |
+| 3 | Customer click-through acceptance | ✅ Done | Signup checkbox, re-acceptance modal, audit log |
+| 4 | Chef onboarding wizard steps 1–4 | ✅ Done | Eligibility / Profile / Cert Upload / Agreement |
+| 5 | Labeling step + label PDF generator | ⬜ Not started | Wizard step 5; per-dish TX label PDF |
+| 6 | Customer checkout cottage-food disclosure | ⬜ Not started | Acknowledgment gate at checkout |
+| 7 | Three-layer content moderation | ⬜ Not started | Keyword filter → AI review → human escalation |
+| 8 | Daily cron for expired certs | ⬜ Not started | Warn 30/7/1 days; auto-deactivate on expiry |
+| 9 | Incident response infrastructure | ⬜ Not started | Runbooks, alerting, escalation paths |
+| 10 | Public help/legal pages + chef recruitment | ⬜ Not started | Static content, FAQ, chef landing page |
+| 11 | Stripe Connect Standard onboarding | ⬜ Not started | **Last** — lawyer review of Chef Agreement should land first; KYC takes 1-3 days/chef, batch before launch |
 
-- 13 compliance columns on `home_restaurants` (cert URL/expiry, attestation, agreement, Stripe, DSHS, TCS, labeling, suspension)
-- 3 moderation columns on `dishes` (`allergens text[]`, `is_tcs boolean`, `moderation_status text`) + check constraint + back-fill
-- `compliance_audit_log` table — append-only, enforced by RLS + immutability trigger
-- `moderation_queue` table — admin-only RLS
-- `trg_check_activation` — 8-condition activation guard (BEFORE INSERT OR UPDATE)
-- `trg_compliance_audit_log_immutable` — blocks UPDATE/DELETE even for service role
-- Trigger test: `supabase/tests/test_activation_trigger.sql` — 18 tests, all passed
-- `docs/schema.md` updated; Known Schema Issues documented
-
----
-
-### ✅ Session 1.5 — Existing Data Cleanup (DONE 2026-05-05)
-
-**Prerequisite:** Strategy decision with Pavan before any migration is written.
-
-**Context:** As of 2026-05-04, `home_restaurants` has 29 rows. 27 have `is_active = true` with all compliance columns NULL — these predate the activation trigger. They cannot be re-activated via normal UPDATE now that the trigger is live. Seed/test rows need to be separated from any real users.
-
-**Scope:**
-
-1. **Audit query** — pull all 29 rows; classify each as: seed data (UUID pattern `feed0001-...`), test data, or real user.
-2. **Cleanup strategy** — options to decide:
-   - Delete all seed rows (they are test data with no real orders)
-   - For real-looking rows: deactivate (`is_active = false`) and email owners to re-complete onboarding
-   - OR: grandfather existing rows with a one-time bypass column (`compliance_grandfathered = true`) — simpler but weaker legally
-3. **`is_active` default fix** — `ALTER TABLE home_restaurants ALTER COLUMN is_active SET DEFAULT false`. Must be done after categorizing existing rows so we don't deactivate anything mid-decision.
-4. **`dishes` RLS update** — add `moderation_status IN ('approved', 'auto_approved')` filter to the customers' SELECT policy on `dishes`, so moderation is enforced at the DB layer, not just client-side.
-5. **`created_at` type** — `ALTER TABLE home_restaurants ALTER COLUMN created_at TYPE timestamptz` (low urgency; needs careful handling of existing data).
-
----
-
-### ✅ Session 2 — Legal pages live + version tracking (DONE 2026-05-05)
-
-- `legal_documents` table: versioned, public RLS, unique live-per-type partial index
-- v1.0.0 seeded for all 3 docs via `npm run seed:legal`
-- `/legal/terms` · `/legal/privacy` · `/legal/chef-agreement` — public, server-rendered, 1h ISR
-- Global footer on all pages: Terms · Privacy · Chef Agreement
-- Version workflow documented in `docs/schema.md`
-
----
-
-### ✅ Session 3 — Customer Click-Through Acceptance + Re-Acceptance Modal (DONE 2026-05-05)
-
-**Why now:** Legal docs are live at `/legal/terms` etc. but they don't legally bind anyone until customers actively accept them. Click-through is ~1 day's work with enormous legal value.
-
-**Scope:**
-
-1. **Acceptance at signup** — add "I agree to the Terms of Service and Privacy Policy" checkbox to `/signup`. Block form submission if unchecked. On submit, record `terms_accepted_version` and `terms_accepted_at` in user metadata or a dedicated `user_agreements` table.
-2. **Acceptance at checkout** — guest customers never sign up, so also require acceptance at checkout (a single checkbox: "By placing this order, I agree to the Terms of Service and Privacy Policy"). Record alongside the order.
-3. **Version bump re-acceptance modal** — when a new version of the ToS is published (`legal_documents` gets a new live row), logged-in users who accepted an older version see a modal on next visit: "We've updated our Terms. Please review and re-accept to continue." Block navigation until accepted.
-4. **DB schema** — `user_agreements` table: `user_id`, `doc_type`, `version`, `accepted_at`, `ip_address`, `user_agent`. One row per (user, doc_type, version). Read-only after insert (append-only pattern).
-
----
-
-### ⬜ Session 4 — Chef Onboarding Wizard Steps 1–4 (NOT STARTED)
-
-**Scope:** Eligibility attestation / Profile / Food handler cert upload / Chef Agreement acceptance.
-
-1. **7-step wizard** at `/dashboard/home-restaurant/onboarding`
-   - Step 1: Cottage food eligibility attestation (4 yes/no questions, SB 541)
-   - Step 2: Food handler cert upload (PDF/image → `chef-credentials` private bucket)
-   - Step 3: Product type declaration (`sells_tcs_foods` toggle + DSHS ID if true)
-   - Step 4: Labeling requirements acknowledgment
-   - Step 5: Chef Agreement acceptance (version + timestamp + IP)
-   - Step 6: Stripe Connect onboarding redirect (`/api/stripe-connect/start`)
-   - Step 7: Activation gate — trigger fires, restaurant goes live
-2. **API routes**
-   - `POST /api/compliance/attest` — writes `cottage_food_attestation_at`, logs to `compliance_audit_log`
-   - `POST /api/compliance/cert-upload` — uploads to `chef-credentials`, writes URL + expiry, logs
-   - `POST /api/compliance/agree` — writes agreement columns + IP, logs
-   - `POST /api/compliance/label-ack` — writes `labeling_acknowledged_at`, logs
-
----
-
-### ⬜ Session 5 — Stripe Connect Standard Onboarding (NOT STARTED)
-
-1. `GET/POST /api/stripe-connect/start` — creates Stripe Connect account, redirects to onboarding
-2. `GET /api/stripe-connect/return` — handles return from Stripe, sets `stripe_payouts_enabled = true`, logs
-3. Activation flow — wizard final step calls `UPDATE home_restaurants SET is_active = true` — trigger validates all 8 conditions
-
----
-
-### ⬜ Session 6 — Labeling Step + PDF Generator (NOT STARTED)
-
-See `docs/legal/05-dish-label-generator-spec.md`.
-
-1. Per-dish label PDF generation (Puppeteer or React-PDF) — name, ingredients, allergens, net weight, producer name/address, "Not inspected by DSHS" statement
-2. Wire label generation into dish save flow
-
----
-
-### ⬜ Session 7 — Customer Checkout Cottage-Food Acknowledgment (NOT STARTED)
-
-Add the required cottage-food disclosure acknowledgment to checkout: "THE FOOD YOU ORDER WAS PRODUCED IN A PRIVATE RESIDENCE THAT IS NOT SUBJECT TO GOVERNMENTAL LICENSING OR INSPECTION." Customer must check a box to proceed.
-
----
-
-### ⬜ Session 8 — Daily Cron for Expired Certs (NOT STARTED)
-
-`supabase/functions/cert-expiration-cron` — daily Edge Function; warns chefs at 30/7/1 days before expiry; auto-deactivates + suspends on expiry; logs to `compliance_audit_log`.
-
----
-
-### ⬜ Session 9 — Three-Layer Content Moderation System (NOT STARTED)
-
-See `docs/legal/08-content-moderation-spec.md` for full spec.
-
-1. `lib/moderation/keywords.ts` — Layer 1 keyword lists (English + Hindi/Telugu/Urdu/Tamil + Spanish)
-2. `app/api/moderation/classify-dish/route.ts` — Layer 2 Claude Haiku classifier
-3. `app/api/moderation/review/` — approve/reject endpoints for admin
-4. `app/admin/moderation/page.tsx` — manual review queue UI (admin only)
-5. Wire into dish add/edit flow; allergen detection combined with classification call
-
----
-
-### ⬜ Session 10 — Incident Response Infrastructure (NOT STARTED)
-
-See `docs/legal/07-incident-response-playbook.md`.
-
----
-
-### ⬜ Session 11 — Public Help/Legal Pages + Chef Recruitment Landing (NOT STARTED)
-
-- `/help/cottage-food` — public explainer for rejected chefs
-- Chef recruitment landing page (replaces the `/legal/chef-agreement` placeholder in the footer "Become a Chef" link)
+**Wizard step order (onboarding page.tsx STEP_LABELS):**
+1. Eligibility — cottage food attestation
+2. Your Profile — name, cuisine, address, contact
+3. Certification — food handler cert upload + expiry
+4. Agreement — Chef Agreement scroll + acceptance
+5. Labeling — per-dish label acknowledgment (Session 5)
+6. Stripe — Connect Standard bank account (Session 11)
+7. Go Live — final activation
