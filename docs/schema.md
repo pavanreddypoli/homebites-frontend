@@ -156,6 +156,7 @@ Append-only record of every compliance event: attestations, cert uploads, policy
 | `cert_uploaded` | `{ "cert_url": "...", "expires_at": "YYYY-MM-DD" }` |
 | `cert_expired_deactivation` | `{ "cert_url": "...", "expired_at": "YYYY-MM-DD" }` |
 | `manual_suspension` | `{ "reason": "..." }` |
+| `labeling_acknowledged` | `{ "acknowledged_at": ISO8601 }` |
 
 ---
 

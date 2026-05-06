@@ -248,7 +248,15 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Storage bucket migration: `supabase/migrations/20260505120000_chef_credentials_bucket.sql` (applied)
 - Smoke tested via `npm run diagnose:session4`; activation trigger verified (blocks `false→true` with exact Stripe gate message)
 
-#### ⬜ Session 5 — Labeling step + label PDF generator (NOT STARTED)
+#### ✅ Session 5 — Labeling step + label PDF generator (DONE 2026-05-06)
+- LabelingStep.tsx: wizard step 5; label preview mockup; checkbox gate; POSTs to `/api/onboarding/acknowledge-labeling`
+- `app/api/onboarding/acknowledge-labeling/route.ts`: writes `labeling_acknowledged_at` + `labeling_acknowledged` audit log row
+- `lib/labelPDF.tsx`: server-only @react-pdf/renderer document; one 4"×6" page per unit; TX SB 541 disclaimer (exact text); TCS safe handling instructions; allergen display with empty-state fallback
+- `app/api/labels/[orderId]/route.ts`: GET; Bearer auth + ownership check; `dishes(allergens, is_tcs)` join (FK confirmed); renders PDF via `renderToBuffer` → `Uint8Array` response
+- Orders page: "Print labels" button per order — fetches with Bearer token, opens blob URL in new tab
+- `lib/compliance.ts`: swapped step order — `labeling_acknowledged_at` is step 5, `stripe_payouts_enabled` is step 6
+- Verified: FK exists, restaurant_id format matches, build clean, PDF renders end-to-end
+- **Known gap:** `dishes.allergens` is empty for all existing rows. Labels show "Allergens: not specified by chef" until AI-assisted allergen detection lands in Session 7. Chefs are legally responsible for accurate allergen disclosure per Chef Agreement §4.3.
 
 #### ⬜ Session 6 — Customer checkout cottage-food disclosure (NOT STARTED)
 
@@ -264,8 +272,8 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–4 are complete and verified. Next is Session 5: Labeling step + label PDF generator."
-3. Ask Pavan: "Ready to start Session 5?"
+2. Tell Pavan: "Ready to continue. Sessions 1–5 are complete and verified. Next is Session 6: Customer checkout cottage-food disclosure."
+3. Ask Pavan: "Ready to start Session 6?"
 
 ## Legal Entity
 
