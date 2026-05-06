@@ -15,8 +15,8 @@ const STEP_LABELS = [
   "Your Profile",
   "Certification",
   "Agreement",
-  "Stripe",
   "Labeling",
+  "Stripe",
   "Go Live",
 ];
 

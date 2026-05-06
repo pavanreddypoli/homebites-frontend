@@ -240,26 +240,32 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - `ClientShell` — mounts `ReAcceptanceModal` globally
 - Verified end-to-end: `diagnose:session3` script confirmed 2 rows written to `compliance_audit_log` for real user UUID
 
-#### ⬜ Session 4 — Chef onboarding wizard steps 1–4: Eligibility / Profile / Cert Upload / Agreement (NOT STARTED)
+#### ✅ Session 4 — Chef onboarding wizard steps 1–4: Eligibility / Profile / Cert Upload / Agreement (DONE 2026-05-06)
+- 7-step wizard shell with progress bar (steps 5-7 placeholder); STEP_LABELS: Eligibility / Your Profile / Certification / Agreement / Labeling / Stripe / Go Live
+- EligibilityStep, ProfileStep (350ms Nominatim debounce), CertUploadStep (chef-credentials bucket), AgreementStep (scroll-to-enable)
+- 4 API routes under `/api/onboarding/`; all include `user_id` in upserts; path traversal prevention on save-cert
+- `lib/markdownComponents.tsx` extracted; `lib/compliance.ts` extended with `HomeRestaurantRow` + `calculateOnboardingStep`
+- Storage bucket migration: `supabase/migrations/20260505120000_chef_credentials_bucket.sql` (applied)
+- Smoke tested via `npm run diagnose:session4`; activation trigger verified (blocks `false→true` with exact Stripe gate message)
 
-#### ⬜ Session 5 — Stripe Connect Standard onboarding (NOT STARTED)
+#### ⬜ Session 5 — Labeling step + label PDF generator (NOT STARTED)
 
-#### ⬜ Session 6 — Labeling step + PDF generator (NOT STARTED)
+#### ⬜ Session 6 — Customer checkout cottage-food disclosure (NOT STARTED)
 
-#### ⬜ Session 7 — Customer checkout cottage-food acknowledgment (NOT STARTED)
+#### ⬜ Session 7 — Three-layer content moderation system (NOT STARTED)
 
 #### ⬜ Session 8 — Daily cron for expired certs (NOT STARTED)
 
-#### ⬜ Session 9 — Three-layer content moderation system (NOT STARTED)
+#### ⬜ Session 9 — Incident response infrastructure (NOT STARTED)
 
-#### ⬜ Session 10 — Incident response infrastructure (NOT STARTED)
+#### ⬜ Session 10 — Public help/legal pages + chef recruitment landing (NOT STARTED)
 
-#### ⬜ Session 11 — Public help/legal pages + chef recruitment landing (NOT STARTED)
+#### ⬜ Session 11 — Stripe Connect Standard onboarding (NOT STARTED — moved last; lawyer review of Chef Agreement should land before chefs sign + connect bank accounts)
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1, 1.5, 2, and 3 are complete and verified in production. Next is Session 4: Chef onboarding wizard (eligibility attestation, food handler cert upload, product type declaration, labeling ack, chef agreement acceptance)."
-3. Ask Pavan: "Ready to start Session 4?"
+2. Tell Pavan: "Ready to continue. Sessions 1–4 are complete and verified. Next is Session 5: Labeling step + label PDF generator."
+3. Ask Pavan: "Ready to start Session 5?"
 
 ## Legal Entity
 
