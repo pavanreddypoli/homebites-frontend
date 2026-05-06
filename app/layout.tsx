@@ -42,14 +42,17 @@ export default function RootLayout({
         <footer className="border-t border-gray-200 py-8 px-4">
           <div className="max-w-5xl mx-auto flex flex-col items-center gap-3 text-sm text-gray-500">
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+              <Link href="/help" className="hover:text-gray-800 transition-colors">
+                Help
+              </Link>
               <Link href="/legal/terms" className="hover:text-gray-800 transition-colors">
                 Terms
               </Link>
               <Link href="/legal/privacy" className="hover:text-gray-800 transition-colors">
                 Privacy
               </Link>
-              <Link href="/legal/chef-agreement" className="hover:text-gray-800 transition-colors">
-                Chef Agreement
+              <Link href="/become-a-chef" className="hover:text-gray-800 transition-colors">
+                Become a Chef
               </Link>
             </nav>
             <p>© {new Date().getFullYear()} RedCube Group LLC d/b/a HomeBites AI</p>

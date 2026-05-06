@@ -102,7 +102,7 @@ Texas Cottage Food Law (SB 541) compliance. Session order reflects build depende
 | 7 | Three-layer content moderation | ✅ Done | Keyword filter → AI classifier (Haiku) → human queue; chef add/edit flows wired; admin queue at `/admin/moderation`; chef notification emails deferred to Session 9 |
 | 8 | Daily cron for expired certs | ✅ Done | `vercel.json` cron 8AM UTC; suspend on expiry; 30/14/7-day warnings; suspension banner on chef dashboard; 13/13 diagnostic checks passed |
 | 9 | Incident response infrastructure | ✅ Done | incidents table; admin incidents list + detail; customer "Report a problem"; manual suspend/reactivate; audit log viewer; deferred rejection email wired |
-| 10 | Public help/legal pages + chef recruitment | ⬜ Not started | Static content, FAQ, chef landing page |
+| 10 | Public help/legal pages + chef recruitment | ✅ Done | /become-a-chef (from chef-requirements-guide.md); /help index; /help/cottage-food; footer updated; outputFileTracingIncludes for Vercel |
 | 11 | Stripe Connect Standard onboarding | ⬜ Not started | **Last** — lawyer review of Chef Agreement should land first; KYC takes 1-3 days/chef, batch before launch |
 
 ---
