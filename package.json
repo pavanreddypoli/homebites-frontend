@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed:legal": "tsx scripts/seed_legal_v1.ts",
-    "diagnose:session3": "tsx scripts/diagnose_session_3.ts"
+    "diagnose:session3": "tsx scripts/diagnose_session_3.ts",
+    "diagnose:session4": "tsx scripts/diagnose_session_4.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
