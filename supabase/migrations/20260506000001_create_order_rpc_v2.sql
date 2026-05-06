@@ -1,8 +1,8 @@
 BEGIN;
 
--- Drop the old version (11-param signature)
+-- Drop the old version — p_restaurant_id is text in the live function (matches orders.restaurant_id)
 DROP FUNCTION IF EXISTS public.create_order_with_items(
-  uuid, uuid, text, numeric, numeric, numeric, numeric, text, text, text, jsonb
+  uuid, text, text, numeric, numeric, numeric, numeric, text, text, text, jsonb
 );
 
 -- Recreate with cottage_food_acknowledged_at at the end.
@@ -12,7 +12,7 @@ DROP FUNCTION IF EXISTS public.create_order_with_items(
 -- (anon-role) inserts into orders to succeed through RLS.
 CREATE OR REPLACE FUNCTION public.create_order_with_items(
   p_customer_id                   uuid,
-  p_restaurant_id                 uuid,
+  p_restaurant_id                 text,                       -- text, matches orders.restaurant_id
   p_restaurant_name               text,
   p_subtotal                      numeric,
   p_service_fee                   numeric,

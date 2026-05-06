@@ -259,7 +259,7 @@ Creates an order and its line items atomically. Returns the new order `id`.
 ```sql
 create_order_with_items(
   p_customer_id                   uuid,
-  p_restaurant_id                 uuid,
+  p_restaurant_id                 text,                       -- text, matches orders.restaurant_id
   p_restaurant_name               text,
   p_subtotal                      numeric,
   p_service_fee                   numeric,
