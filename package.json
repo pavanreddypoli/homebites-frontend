@@ -10,7 +10,8 @@
     "seed:legal": "tsx scripts/seed_legal_v1.ts",
     "diagnose:session3": "tsx scripts/diagnose_session_3.ts",
     "diagnose:session4": "tsx scripts/diagnose_session_4.ts",
-    "test:labels": "tsx scripts/test_label_generation.ts"
+    "test:labels": "tsx scripts/test_label_generation.ts",
+    "diagnose:session7": "tsx --conditions react-server scripts/diagnose_session_7.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.0",
