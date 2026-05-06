@@ -12,7 +12,8 @@
     "diagnose:session4": "tsx scripts/diagnose_session_4.ts",
     "test:labels": "tsx scripts/test_label_generation.ts",
     "diagnose:session7": "tsx --conditions react-server scripts/diagnose_session_7.ts",
-    "diagnose:session8": "tsx scripts/diagnose_session_8.ts"
+    "diagnose:session8": "tsx scripts/diagnose_session_8.ts",
+    "diagnose:session9": "tsx scripts/diagnose_session_9.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.0",
