@@ -311,16 +311,23 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - `docs/schema.md`: incidents table + new event types (incident_created, incident_resolved, manual_suspension updated, chef_reactivated)
 - **RLS note (FIX 2):** incidents_reporter_insert requires `auth.uid() = reporter_id` — blocks anon-key spam; guest reports still work via service role in API route
 
-#### ⬜ Session 10 — Public help/legal pages + chef recruitment landing (NOT STARTED)
-
-#### ⬜ Session 10 — Public help/legal pages + chef recruitment landing (NOT STARTED)
+#### ✅ Session 10 — Public help/legal pages + chef recruitment landing (DONE)
+- `docs/help/cottage-food-explained.md`: customer-facing cottage food explainer; "report prohibited items" links to in-app /dashboard/customer/orders (Session 9 incident flow) before email fallback
+- `components/MarkdownPageLayout.tsx`: shared server component; header + ReactMarkdown article + optional CTA button; reuses `lib/markdownComponents.tsx`
+- `app/become-a-chef/page.tsx`: server component; reads `docs/legal/10-chef-requirements-guide.md` via `fs.readFile`; CTA → /signup; `revalidate = 3600`
+- `app/help/page.tsx`: help index; `ARTICLES` array grows over time; no DB dependency
+- `app/help/cottage-food/page.tsx`: server component; reads `docs/help/cottage-food-explained.md`; CTA → /dashboard/customer; `revalidate = 3600`
+- `next.config.ts`: `outputFileTracingIncludes` added — bundles markdown files for Vercel deployment (without this, `fs.readFile` fails at runtime on Vercel)
+- `app/layout.tsx`: footer updated — Help · Terms · Privacy · Become a Chef (Chef Agreement removed from footer; still live at /legal/chef-agreement)
+- `docs/help/` directory established — customer-facing help content lives here, separate from `docs/legal/` (legal documents)
+- Verified on production: all three pages return HTTP 200 on homebitesai.com
 
 #### ⬜ Session 11 — Stripe Connect Standard onboarding (NOT STARTED — moved last; lawyer review of Chef Agreement should land before chefs sign + connect bank accounts)
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–9 are complete. Next is Session 10: public help/legal pages and chef recruitment landing."
-3. Ask Pavan: "Ready to start Session 10?"
+2. Tell Pavan: "Ready to continue. Sessions 1–10 are complete. Next is Session 11: Stripe Connect Standard onboarding — the final compliance session."
+3. Ask Pavan: "Ready to start Session 11?"
 
 ## Legal Entity
 
