@@ -258,7 +258,13 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - Verified: FK exists, restaurant_id format matches, build clean, PDF renders end-to-end
 - **Known gap:** `dishes.allergens` is empty for all existing rows. Labels show "Allergens: not specified by chef" until AI-assisted allergen detection lands in Session 7. Chefs are legally responsible for accurate allergen disclosure per Chef Agreement §4.3.
 
-#### ⬜ Session 6 — Customer checkout cottage-food disclosure (NOT STARTED)
+#### ✅ Session 6 — Customer checkout cottage-food disclosure (DONE 2026-05-05)
+- `cottage_food_acknowledged_at timestamptz` column added to `orders` (nullable; migration `20260506000000`)
+- `create_order_with_items` RPC recreated with new param + `SECURITY DEFINER` preserved; `RAISE EXCEPTION` if NULL enforces acknowledgment at DB level (migration `20260506000001`)
+- Checkout: disclosure card with verbatim ToS Section 3 all-caps disclaimer + allergen warning; Pay button disabled until checkbox checked; both mobile and desktop buttons gated
+- `p_cottage_food_acknowledged_at: new Date().toISOString()` passed from client on submit
+- POST `/api/compliance/log-cottage-food-ack`: service-role write to `compliance_audit_log`; guest-safe (user_id nullable); best-effort — does not block order on failure
+- `docs/schema.md` and `docs/legal/04-onboarding-compliance-spec.md` updated
 
 #### ⬜ Session 7 — Three-layer content moderation system (NOT STARTED)
 
@@ -272,8 +278,8 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 
 ## Next Session — Start Here
 1. Read CLAUDE.md fully
-2. Tell Pavan: "Ready to continue. Sessions 1–5 are complete and verified. Next is Session 6: Customer checkout cottage-food disclosure."
-3. Ask Pavan: "Ready to start Session 6?"
+2. Tell Pavan: "Ready to continue. Sessions 1–6 are complete and verified. Next is Session 7: three-layer content moderation (keyword filter → AI review → human escalation)."
+3. Ask Pavan: "Ready to start Session 7?"
 
 ## Legal Entity
 
