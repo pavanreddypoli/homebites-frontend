@@ -105,6 +105,14 @@ Texas Cottage Food Law (SB 541) compliance. Session order reflects build depende
 | 10 | Public help/legal pages + chef recruitment | ⬜ Not started | Static content, FAQ, chef landing page |
 | 11 | Stripe Connect Standard onboarding | ⬜ Not started | **Last** — lawyer review of Chef Agreement should land first; KYC takes 1-3 days/chef, batch before launch |
 
+---
+
+## Future Tuning — Content Moderation Pipeline
+
+After launch + 100+ moderated dishes with zero false-negatives in the L1=review/L2=allow combo, consider relaxing pipeline to allow auto-approval when L2 confidence > 0.95 AND L1 is review-flag (not hard-block). Until then, conservative default: any L1 flag forces human queue.
+
+---
+
 **Wizard step order (onboarding page.tsx STEP_LABELS):**
 1. Eligibility — cottage food attestation
 2. Your Profile — name, cuisine, address, contact
