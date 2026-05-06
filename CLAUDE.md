@@ -282,7 +282,7 @@ Cart state lives in `localStorage` key `homebites_cart` — managed entirely in 
 - `app/dashboard/customer/page.tsx` — dishes query filtered `.in("moderation_status", ["approved", "auto_approved"])`
 - `app/dashboard/customer/restaurant/[id]/page.tsx` — same filter
 - `app/admin/moderation/page.tsx` — admin queue UI; approve/reject with reason; L1+L2 detail display
-- **Deferred:** Chef notification emails on approve/reject → Session 9 (Resend); dish_id is null for new-dish moderation runs (known gap, admin UI disables approve/reject for those rows)
+- **Deferred:** Chef notification emails on moderation reject — wire existing Resend setup in Session 9. For now, chef sees rejection on menu page via red badge. dish_id is null for new-dish moderation runs (known gap, admin UI disables approve/reject for those rows)
 
 #### ⬜ Session 8 — Daily cron for expired certs (NOT STARTED)
 
