@@ -9,6 +9,7 @@ import EligibilityStep from "./_steps/EligibilityStep";
 import ProfileStep from "./_steps/ProfileStep";
 import CertUploadStep from "./_steps/CertUploadStep";
 import AgreementStep from "./_steps/AgreementStep";
+import LabelingStep from "./_steps/LabelingStep";
 
 const STEP_LABELS = [
   "Eligibility",
@@ -110,7 +111,7 @@ export default function OnboardingWizard() {
             <div className="flex gap-1 mb-2">
               {STEP_LABELS.map((_, i) => {
                 const s = i + 1;
-                const future = s > 4;
+                const future = s > 5;
                 return (
                   <div
                     key={s}
@@ -130,7 +131,7 @@ export default function OnboardingWizard() {
             <div className="flex gap-1">
               {STEP_LABELS.map((label, i) => {
                 const s = i + 1;
-                const future = s > 4;
+                const future = s > 5;
                 return (
                   <div key={s} className="flex-1 text-center">
                     <span
@@ -147,7 +148,7 @@ export default function OnboardingWizard() {
               })}
             </div>
             <p className="text-[10px] mt-1" style={{ color: "var(--hb-fg-subtle)" }}>
-              * Steps 5–7 coming soon
+              * Steps 6–7 coming soon
             </p>
           </div>
 
@@ -184,7 +185,14 @@ export default function OnboardingWizard() {
                 onComplete={(updates) => advanceTo(5, updates)}
               />
             )}
-            {(step === 5 || step === 6 || step === 7 || step === "complete") && (
+            {step === 5 && (
+              <LabelingStep
+                accessToken={accessToken}
+                onBack={() => advanceTo(4)}
+                onComplete={(updates) => advanceTo(6, updates)}
+              />
+            )}
+            {(step === 6 || step === 7 || step === "complete") && (
               <div className="text-center py-6 space-y-4">
                 <div className="text-4xl">🎉</div>
                 <h2
@@ -194,8 +202,8 @@ export default function OnboardingWizard() {
                   Almost there
                 </h2>
                 <p className="text-[14px] leading-relaxed" style={{ color: "var(--hb-fg-muted)" }}>
-                  Steps 5–7 are coming soon: connect Stripe for payouts, acknowledge labeling
-                  requirements, and go live. We&apos;ll email you when you can complete onboarding.
+                  Step 6 (Stripe payouts) and Step 7 (Activation) are coming next.
+                  We&apos;ll email you when you can complete onboarding.
                 </p>
                 <button
                   onClick={() => router.push("/dashboard/home-restaurant")}

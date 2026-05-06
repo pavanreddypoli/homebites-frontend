@@ -76,8 +76,8 @@ export function calculateOnboardingStep(row: HomeRestaurantRow): OnboardingStep 
   if (!row.name || !row.lat || !row.lng) return 2;
   if (!row.food_handler_cert_url || !row.food_handler_cert_expires_at) return 3;
   if (!row.chef_agreement_accepted_at) return 4;
-  if (!row.stripe_payouts_enabled) return 5;
-  if (!row.labeling_acknowledged_at) return 6;
+  if (!row.labeling_acknowledged_at) return 5;
+  if (!row.stripe_payouts_enabled) return 6;
   if (!row.is_active) return 7;
   return "complete";
 }

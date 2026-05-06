@@ -9,10 +9,12 @@
     "lint": "eslint",
     "seed:legal": "tsx scripts/seed_legal_v1.ts",
     "diagnose:session3": "tsx scripts/diagnose_session_3.ts",
-    "diagnose:session4": "tsx scripts/diagnose_session_4.ts"
+    "diagnose:session4": "tsx scripts/diagnose_session_4.ts",
+    "test:labels": "tsx scripts/test_label_generation.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-pdf/renderer": "^4.5.1",
     "@stripe/react-stripe-js": "^6.2.0",
     "@stripe/stripe-js": "^9.3.1",
     "@supabase/supabase-js": "^2.87.1",

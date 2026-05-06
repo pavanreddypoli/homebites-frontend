@@ -63,6 +63,7 @@ export default function HomeRestaurantOrdersPage() {
   const [updatingIds, setUpdatingIds] = useState<Record<string, boolean>>({});
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState("");
 
   const today = new Date().toDateString();
   const todayOrders = orders.filter((o) => new Date(o.created_at).toDateString() === today);
@@ -94,6 +95,8 @@ export default function HomeRestaurantOrdersPage() {
     }
 
     async function init() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setAccessToken(session?.access_token ?? "");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
 
@@ -138,6 +141,17 @@ export default function HomeRestaurantOrdersPage() {
     init();
     return () => { if (channel) supabase.removeChannel(channel); };
   }, []);
+
+  async function printLabels(orderId: string) {
+    if (!accessToken) { alert("Session expired — please refresh."); return; }
+    const res = await fetch(`/api/labels/${orderId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) { alert("Could not generate labels. Please try again."); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  }
 
   async function updateStatus(orderId: string, status: string) {
     setUpdatingIds((prev) => ({ ...prev, [orderId]: true }));
@@ -330,6 +344,17 @@ export default function HomeRestaurantOrdersPage() {
                           <span className="text-[12px] font-semibold" style={{ color: "#15803D" }}>✓ Completed</span>
                         )}
                       </div>
+                    </div>
+
+                    {/* Print labels */}
+                    <div className="px-4 pb-3">
+                      <button
+                        onClick={() => printLabels(order.id)}
+                        className="text-[12px] font-semibold px-3 py-1.5 rounded-full"
+                        style={{ color: "var(--hb-primary)", border: "1px solid var(--hb-primary)", background: "#fff" }}
+                      >
+                        Print labels
+                      </button>
                     </div>
                   </div>
                 </div>
